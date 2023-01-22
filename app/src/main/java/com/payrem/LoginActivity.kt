@@ -2,9 +2,7 @@ package com.payrem
 
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
-import android.os.StrictMode
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent

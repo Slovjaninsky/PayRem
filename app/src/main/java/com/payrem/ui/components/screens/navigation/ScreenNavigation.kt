@@ -9,7 +9,6 @@ import com.payrem.LoginActivity
 import com.payrem.MainActivity
 import com.payrem.SignInScreen
 import com.payrem.SignUpMailScreen
-import com.payrem.*
 
 @Composable
 fun ScreenNavigation(
