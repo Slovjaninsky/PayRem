@@ -4,7 +4,6 @@ package com.payrem
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.StrictMode
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,7 +32,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.google.gson.Gson
 import com.payrem.ui.components.screens.navigation.ScreenNavigation
 import com.payrem.ui.components.screens.navigation.ScreenNavigationItem
 import com.payrem.ui.theme.PayRemTheme
@@ -59,7 +56,6 @@ class LoginActivity : ComponentActivity() {
 
 @Composable
 fun MainSignInScreen() {
-    var pieChartActive by rememberSaveable { mutableStateOf(true) }
     val navController = rememberNavController()
     Scaffold(
         topBar = {
@@ -137,7 +133,7 @@ fun SignInScreen(context: Context, navController: NavController) {
 //                            }
 ////                             throw FailedLoginException("Invalid password for email")
 //
-//                            context.startActivity(Intent(context, MainActivity::class.java))
+                            context.startActivity(Intent(context, MainActivity::class.java))
 //                        } catch (error: Exception) {
 //                            println("Caught a FailedLoginException! You should see the error message on the screen")
 //                            showError.value = true
@@ -146,21 +142,21 @@ fun SignInScreen(context: Context, navController: NavController) {
 
                     })
                     SecondaryButton("SIGN UP", 5.dp, onClick = {
-//                        navController.navigate(ScreenNavigationItem.SignUp.route) {
-//                            // Pop up to the start destination of the graph to
-//                            // avoid building up a large stack of destinations
-//                            // on the back stack as users select items
-//                            navController.graph.startDestinationRoute?.let { route ->
-//                                popUpTo(route) {
-//                                    saveState = true
-//                                }
-//                            }
-//                            // Avoid multiple copies of the same destination when
-//                            // reselecting the same item
-//                            launchSingleTop = true
-//                            // Restore state when reselecting a previously selected item
-//                            restoreState = true
-//                        }
+                        navController.navigate(ScreenNavigationItem.SignUpMail.route) {
+                            // Pop up to the start destination of the graph to
+                            // avoid building up a large stack of destinations
+                            // on the back stack as users select items
+                            navController.graph.startDestinationRoute?.let { route ->
+                                popUpTo(route) {
+                                    saveState = true
+                                }
+                            }
+                            // Avoid multiple copies of the same destination when
+                            // reselecting the same item
+                            launchSingleTop = true
+                            // Restore state when reselecting a previously selected item
+                            restoreState = true
+                        }
                     })
 
                     if (showError.value) ContextCompat.getMainExecutor(context).execute {
@@ -284,21 +280,21 @@ fun SignUpMailScreen(context: Context, navController: NavController) {
 
                     })
                     SecondaryButton("SIGN IN", 5.dp, onClick = {
-//                        navController.navigate(ScreenNavigationItem.SignIn.route) {
-//                            // Pop up to the start destination of the graph to
-//                            // avoid building up a large stack of destinations
-//                            // on the back stack as users select items
-//                            navController.graph.startDestinationRoute?.let { route ->
-//                                popUpTo(route) {
-//                                    saveState = true
-//                                }
-//                            }
-//                            // Avoid multiple copies of the same destination when
-//                            // reselecting the same item
-//                            launchSingleTop = true
-//                            // Restore state when reselecting a previously selected item
-//                            restoreState = true
-//                        }
+                        navController.navigate(ScreenNavigationItem.SignIn.route) {
+                            // Pop up to the start destination of the graph to
+                            // avoid building up a large stack of destinations
+                            // on the back stack as users select items
+                            navController.graph.startDestinationRoute?.let { route ->
+                                popUpTo(route) {
+                                    saveState = true
+                                }
+                            }
+                            // Avoid multiple copies of the same destination when
+                            // reselecting the same item
+                            launchSingleTop = true
+                            // Restore state when reselecting a previously selected item
+                            restoreState = true
+                        }
                     })
 //                    if (showError.value)
 //                        ContextCompat.getMainExecutor(context).execute {
