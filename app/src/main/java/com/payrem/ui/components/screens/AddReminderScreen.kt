@@ -10,6 +10,8 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Bottom
+import androidx.compose.ui.Alignment.Companion.Top
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
@@ -19,6 +21,9 @@ import com.payrem.Preferences
 import com.payrem.backend.entities.ExpenseGroup
 import com.payrem.backend.service.BackendService
 import com.payrem.ui.components.DatePickerField
+import com.payrem.ui.components.TimePicker
+
+val numberRegex = Regex("^\\d*\$")
 
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterialApi::class)
@@ -30,8 +35,11 @@ fun AddReminderScreen(
     var reminderTitle by remember { mutableStateOf(TextFieldValue()) }
     var reminderDescription by remember { mutableStateOf(TextFieldValue()) }
     val reminderDate = remember { mutableStateOf("") }
-    var reminderReccurence by remember { mutableStateOf(TextFieldValue()) }
+    val reminderTime = remember { mutableStateOf("") }
+    var reminderRecurrenceNumber by remember { mutableStateOf(TextFieldValue()) }
+    var reminderRecurrencePeriod by remember { mutableStateOf(TextFieldValue()) }
     var isGroupReminder by remember { mutableStateOf(false) }
+    var expandedDropDownRecurrence by remember { mutableStateOf(false) }
     var expandedDropdownGroups by remember { mutableStateOf(false) }
     var groupName by remember { mutableStateOf("") }
     var groupId by remember { mutableStateOf(0L) }
@@ -62,7 +70,9 @@ fun AddReminderScreen(
                         reminderTitle = TextFieldValue("")
                         reminderDescription = TextFieldValue("")
                         reminderDate.value = ""
-                        reminderReccurence = TextFieldValue("")
+                        reminderTime.value = ""
+                        reminderRecurrenceNumber = TextFieldValue("")
+                        reminderRecurrencePeriod = TextFieldValue("")
                         isGroupReminder = false
                         groupName = ""
                         groupId = 0L
@@ -111,6 +121,82 @@ fun AddReminderScreen(
                 modifier = Modifier
                     .fillMaxWidth()
             )
+        }
+        Row(
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth()
+        ) {
+            TimePicker(
+                reminderTime,
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+        }
+        Row(
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth()
+        ) {
+            TextField(
+                modifier = Modifier
+                    .align(Top)
+                    .width(120.dp),
+                value = reminderRecurrenceNumber,
+                onValueChange = {
+                    if (numberRegex.matches(it.text)) {
+                        reminderRecurrenceNumber = it
+                    }
+                },
+                label = {
+                    Text(text = "Frequency")
+                }
+            )
+            ExposedDropdownMenuBox(
+                expanded = expandedDropDownRecurrence,
+                onExpandedChange = {
+                    expandedDropDownRecurrence = !expandedDropDownRecurrence
+                },
+                modifier = Modifier
+                    .padding(start = 10.dp)
+                    .align(Bottom)
+            ) {
+                TextField(
+                    value = reminderRecurrencePeriod,
+                    onValueChange = { },
+                    readOnly = true,
+                    label = {
+                        Text(text = "Period")
+                    },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = expandedDropDownRecurrence
+                        )
+                    },
+                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = expandedDropDownRecurrence,
+                    onDismissRequest = { expandedDropDownRecurrence = false },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    listOf("Day", "Month", "Year").forEach { period ->
+                        DropdownMenuItem(
+                            onClick = {
+                                reminderRecurrencePeriod = TextFieldValue(period)
+                                expandedDropDownRecurrence = false
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            Text(text = period)
+                        }
+                    }
+                }
+            }
         }
         Row(
             modifier = Modifier

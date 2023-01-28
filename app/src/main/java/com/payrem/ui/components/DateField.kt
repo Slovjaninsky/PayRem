@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import android.widget.DatePicker
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.MutableState
 import java.util.Calendar
 import java.util.Date
@@ -37,7 +38,9 @@ fun DatePickerField(mDate: MutableState<String>, modifier: Modifier) {
         }, mYear, mMonth, mDay
     )
     Column(modifier = modifier) {
-        Box {
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             TextField(
                 value = mDate.value,
                 onValueChange = {  },
@@ -45,7 +48,8 @@ fun DatePickerField(mDate: MutableState<String>, modifier: Modifier) {
                 readOnly = true,
                 label = {
                     Text(text = "Date")
-                }
+                },
+                modifier = Modifier.fillMaxWidth()
             )
             Box(
                 modifier = Modifier
