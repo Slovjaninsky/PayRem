@@ -9,7 +9,9 @@ import com.payrem.LoginActivity
 import com.payrem.MainActivity
 import com.payrem.SignInScreen
 import com.payrem.SignUpMailScreen
-import com.payrem.*
+import com.payrem.ui.components.screens.AddReminderScreen
+import com.payrem.ui.components.screens.GroupScreen
+import com.payrem.ui.components.screens.PersonalScreen
 
 @Composable
 fun ScreenNavigation(
@@ -18,6 +20,15 @@ fun ScreenNavigation(
     startDestination: String
 ) {
     NavHost(navController, startDestination = startDestination) {
+        composable(ScreenNavigationItem.Personal.route) {
+            PersonalScreen(context)
+        }
+        composable(ScreenNavigationItem.Group.route) {
+            GroupScreen(context)
+        }
+        composable(ScreenNavigationItem.AddSpending.route) {
+            AddReminderScreen(context)
+        }
         composable(ScreenNavigationItem.SignIn.route) {
             SignInScreen(context, navController)
         }
