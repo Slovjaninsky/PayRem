@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.payrem.Preferences
-import com.payrem.backend.service.ExpenseItem
+import com.payrem.backend.service.ReminderItem
 import com.payrem.ui.components.ExpandableList
 
 @Composable
@@ -27,7 +27,7 @@ fun PersonalScreen(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            val data = listOf<ExpenseItem>() // TODO Redesign here
+            val data = listOf<ReminderItem>() // TODO Redesign here
             DisplayList(
                 scaleButtonWidth, scaleButtonPadding, data
             )
@@ -39,7 +39,7 @@ fun PersonalScreen(
 private fun DisplayList(
     scaleButtonWidth: Int,
     scaleButtonPadding: Int,
-    data: List<ExpenseItem>
+    data: List<ReminderItem>
 ) {
     Box(
         modifier = Modifier
@@ -47,6 +47,5 @@ private fun DisplayList(
             .padding((scaleButtonWidth + scaleButtonPadding).dp, 0.dp, 0.dp, 0.dp),
         contentAlignment = TopCenter
     ) {
-        ExpandableList(items = data)
     }
 }

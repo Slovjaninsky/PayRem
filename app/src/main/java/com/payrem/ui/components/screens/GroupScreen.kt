@@ -29,7 +29,7 @@ import com.payrem.backend.api.sendGet
 import com.payrem.backend.api.sendPost
 import com.payrem.Preferences
 import com.payrem.PreferencesData
-import com.payrem.backend.entities.Expense
+import com.payrem.backend.entities.Reminder
 import com.payrem.backend.exceptions.ServerException
 
 @Composable
@@ -39,7 +39,7 @@ fun GroupScreen(
     val preferences = rememberSaveable { Preferences(context).read() }
 
     // initialize tabs
-    val tabItems = listOf("Visual", "List")
+    val tabItems = listOf("Reminders", "Members")
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) } // selected index of tab
     var groupId by rememberSaveable { mutableStateOf(-1L) }
     var userAddedSwitcher by rememberSaveable { mutableStateOf(false) }
@@ -62,12 +62,12 @@ fun GroupScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            if (selectedTabIndex == 0) { // if visual tab
-                DisplayVisual(preferences, groupId, userAddedSwitcher) {
+            if (selectedTabIndex == 0) {
+                DisplayList(preferences, groupId, BackendService(preferences).getGroupList(groupId))
+            } else {
+                DisplayMembers(preferences, groupId, userAddedSwitcher) {
                     userAddedSwitcher = !userAddedSwitcher
                 }
-            } else { // if list tab
-                DisplayList(preferences, groupId, BackendService(preferences).getGroupList(groupId))
             }
         }
     }
@@ -258,13 +258,12 @@ private fun DisplayTabs(
 }
 
 @Composable
-private fun DisplayVisual(
+private fun DisplayMembers(
     preferences: PreferencesData,
     groupId: Long,
     userAdded: Boolean,
     onUserAdd: () -> Unit
 ) {
-    val data = BackendService(preferences).getGroupVisualBarChart(groupId)
 
     Column(
         modifier = Modifier
@@ -291,7 +290,7 @@ private fun DisplayVisual(
 private fun DisplayList(
     preferences: PreferencesData,
     groupId: Long,
-    data: List<Expense>
+    data: List<Reminder>
 ) {
     Box(
         modifier = Modifier
@@ -312,19 +311,7 @@ private fun DisplayList(
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = item.getDescription(),
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .padding(10.dp)
-                    )
-                    Text(
-                        text = "${item.getAmount()} ${BackendService(preferences).getGroupById(groupId).getCurrency()}",
-                        fontSize = 14.sp,
-                        color = Color.hsl(358f, 0.63f, 0.49f),
-                        modifier = Modifier
-                            .padding(10.dp)
-                    )
+
                 }
             })
         }

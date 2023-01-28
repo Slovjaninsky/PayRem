@@ -18,7 +18,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.payrem.Preferences
-import com.payrem.backend.entities.ExpenseGroup
+import com.payrem.backend.entities.ReminderGroup
 import com.payrem.backend.service.BackendService
 import com.payrem.ui.components.DatePickerField
 import com.payrem.ui.components.TimePicker
@@ -44,7 +44,7 @@ fun AddReminderScreen(
     var groupName by remember { mutableStateOf("") }
     var groupId by remember { mutableStateOf(0L) }
     var groupIdLast by remember { mutableStateOf(0L) }
-    var groupList by remember { mutableStateOf(listOf<ExpenseGroup>()) }
+    var groupList by remember { mutableStateOf(listOf<ReminderGroup>()) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -84,7 +84,16 @@ fun AddReminderScreen(
                 }
                 Button(
                     onClick = {
-
+                        if(groupId == 0L) {
+                            BackendService(preferences).addPersonalReminder(
+                                reminderTitle.text,
+                                reminderDescription.text,
+                                reminderRecurrenceNumber.text.toInt(),
+                                reminderRecurrencePeriod.text,
+                                reminderDate.value,
+                                reminderTime.value
+                            )
+                        }
                     },
                     modifier = Modifier
                         .padding(1.dp)

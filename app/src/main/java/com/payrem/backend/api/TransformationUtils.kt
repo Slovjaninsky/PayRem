@@ -9,13 +9,13 @@ fun jsonArrayToApplicationUsers(jsonBody: String): List<ApplicationUser> {
     return Gson().fromJson(jsonBody, typeToken)
 }
 
-fun jsonArrayToExpenses(jsonBody: String): ArrayList<Expense> {
-    val typeToken = object : TypeToken<ArrayList<Expense>>() {}.type
+fun jsonArrayToExpenses(jsonBody: String): ArrayList<Reminder> {
+    val typeToken = object : TypeToken<ArrayList<Reminder>>() {}.type
     return Gson().fromJson(jsonBody, typeToken)
 }
 
-fun jsonArrayToExpenseGroups(jsonBody: String): List<ExpenseGroup> {
-    val typeToken = object : TypeToken<List<ExpenseGroup>>() {}.type
+fun jsonArrayToExpenseGroups(jsonBody: String): List<ReminderGroup> {
+    val typeToken = object : TypeToken<List<ReminderGroup>>() {}.type
     return Gson().fromJson(jsonBody, typeToken)
 }
 
@@ -23,12 +23,12 @@ fun jsonToApplicationUser(jsonBody: String): ApplicationUser {
     return Gson().fromJson(jsonBody, ApplicationUser::class.java)
 }
 
-fun jsonToExpense(jsonBody: String): Expense {
-    return Gson().fromJson(jsonBody, Expense::class.java)
+fun jsonToExpense(jsonBody: String): Reminder {
+    return Gson().fromJson(jsonBody, Reminder::class.java)
 }
 
-fun jsonToExpenseGroup(jsonBody: String): ExpenseGroup {
-    return Gson().fromJson(jsonBody, ExpenseGroup::class.java)
+fun jsonToExpenseGroup(jsonBody: String): ReminderGroup {
+    return Gson().fromJson(jsonBody, ReminderGroup::class.java)
 }
 
 
