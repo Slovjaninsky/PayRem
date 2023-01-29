@@ -1,34 +1,25 @@
 package com.payrem.backend.entities
 
 class ApplicationUser {
+    var id: Long = -1
+    var password: String = ""
+    var name: String = ""
+    var surname: String = ""
+    var email: String = ""
 
-    private var id: Long = -1
-    private var username: String = ""
-    private var email: String = ""
-    private var password: String = ""
-
-    constructor()
-
-    constructor(id: Long, username: String, email: String) {
+    constructor(id: Long, password: String, name: String, surname: String, email: String) {
         this.id = id
-        this.username = username
-        this.email = email
-    }
-
-    constructor(username: String, email: String) {
-        this.username = username
-        this.email = email
-    }
-
-    constructor(username: String, email: String, password: String) {
-        this.username = username
-        this.email = email
         this.password = password
+        this.name = name
+        this.surname = surname
+        this.email = email
     }
 
-
-    override fun toString(): String {
-        return "ApplicationUser(id=$id, username='$username', email='$email')"
+    constructor(password: String, name: String, surname: String, email: String) {
+        this.password = password
+        this.name = name
+        this.surname = surname
+        this.email = email
     }
 
     override fun equals(other: Any?): Boolean {
@@ -38,34 +29,26 @@ class ApplicationUser {
         other as ApplicationUser
 
         if (id != other.id) return false
+        if (password != other.password) return false
+        if (name != other.name) return false
+        if (surname != other.surname) return false
+        if (email != other.email) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return id.hashCode()
+        var result = id.hashCode()
+        result = 31 * result + password.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + surname.hashCode()
+        result = 31 * result + email.hashCode()
+        return result
     }
 
-    fun getUsername(): String {
-        return this.username
+    override fun toString(): String {
+        return "ApplicationUser(id=$id, password='$password', name='$name', surname='$surname', email='$email')"
     }
-
-    fun getEmail(): String {
-        return this.email
-    }
-
-    fun getId(): Long{
-        return this.id
-    }
-
-    fun getPassword(): String {
-        return password
-    }
-
-    fun setPassword(password: String) {
-        this.password = password
-    }
-
 }
 
 
