@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.payrem.Preferences
+import com.payrem.backend.entities.Reminder
 import com.payrem.backend.entities.ReminderGroup
 import com.payrem.backend.service.BackendService
 import com.payrem.ui.components.DatePickerField
@@ -29,7 +30,8 @@ val numberRegex = Regex("^\\d*\$")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddReminderScreen(
-    context: Context
+    context: Context,
+    edit: Reminder = Reminder()
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
     var reminderTitle by remember { mutableStateOf(TextFieldValue()) }
@@ -45,6 +47,24 @@ fun AddReminderScreen(
     var groupId by remember { mutableStateOf(0L) }
     var groupIdLast by remember { mutableStateOf(0L) }
     var groupList by remember { mutableStateOf(listOf<ReminderGroup>()) }
+
+    if (edit.getId() != -1L) {
+        reminderTitle = TextFieldValue(edit.getTitle())
+        reminderDescription = TextFieldValue(edit.getDescription())
+        reminderDate.value = edit.getDateStamp()
+        reminderTime.value = edit.getTimeStamp()
+        reminderRecurrenceNumber = if (edit.getFrequency() >= 0)
+                TextFieldValue(edit.getFrequency().toString())
+            else
+                TextFieldValue((-edit.getFrequency()).toString())
+        reminderRecurrencePeriod = if (edit.getFrequency() >= 0)
+                TextFieldValue("Day")
+            else
+                TextFieldValue("Month")
+        isGroupReminder = edit.isGroupReminder()
+        groupId = edit.getGroupId()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -67,6 +87,7 @@ fun AddReminderScreen(
             ) {
                 Button(
                     onClick = {
+                        // Clear everything
                         reminderTitle = TextFieldValue("")
                         reminderDescription = TextFieldValue("")
                         reminderDate.value = ""
@@ -84,15 +105,11 @@ fun AddReminderScreen(
                 }
                 Button(
                     onClick = {
-                        if(groupId == 0L) {
-                            BackendService(preferences).addPersonalReminder(
-                                reminderTitle.text,
-                                reminderDescription.text,
-                                reminderRecurrenceNumber.text.toInt(),
-                                reminderRecurrencePeriod.text,
-                                reminderDate.value,
-                                reminderTime.value
-                            )
+                        if (edit.getId() != -1L) {
+                            /* TODO Edit existing reminder */
+                        }
+                        else {
+                            /* TODO Add new reminder */
                         }
                     },
                     modifier = Modifier
@@ -241,8 +258,7 @@ fun AddReminderScreen(
                             .filter { group -> group.getId() != preferences.groupId }
                         if (isGroupReminder) {
                             groupId = groupIdLast
-                        }
-                        else {
+                        } else {
                             groupIdLast = groupId
                             groupId = 0L
                         }
