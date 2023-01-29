@@ -32,6 +32,7 @@ import com.payrem.Preferences
 import com.payrem.PreferencesData
 import com.payrem.backend.entities.Reminder
 import com.payrem.backend.exceptions.ServerException
+import com.payrem.ui.components.screens.navigation.ScreenNavigationItem
 import compose.icons.EvaIcons
 import compose.icons.evaicons.Fill
 import compose.icons.evaicons.fill.Edit
@@ -40,7 +41,8 @@ import compose.icons.evaicons.fill.Trash
 @Composable
 fun GroupScreen(
     context: Context,
-    navController: NavController
+    navController: NavController,
+    edit: MutableState<Reminder>
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
 
@@ -49,7 +51,10 @@ fun GroupScreen(
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) } // selected index of tab
     var groupId by rememberSaveable { mutableStateOf(-1L) }
     var userAddedSwitcher by rememberSaveable { mutableStateOf(false) }
-    val data = remember { mutableStateOf(BackendService(preferences).getGroupList(groupId)) }
+
+    // TODO: create a function to get personal from backend
+    val data = remember { mutableListOf<Reminder>() }
+//    data.addAll()
 
     Column(
         modifier = Modifier
@@ -70,7 +75,7 @@ fun GroupScreen(
                 .fillMaxSize()
         ) {
             if (selectedTabIndex == 0) {
-                DisplayList(preferences, groupId, data, navController)
+                DisplayList(preferences, groupId, data, navController, edit)
             } else {
                 DisplayMembers(preferences, groupId, userAddedSwitcher) {
                     userAddedSwitcher = !userAddedSwitcher
@@ -297,8 +302,9 @@ private fun DisplayMembers(
 private fun DisplayList(
     preferences: PreferencesData,
     groupId: Long,
-    data:  MutableState<List<Reminder>>,
-    navController: NavController
+    data:  MutableList<Reminder>,
+    navController: NavController,
+    edit: MutableState<Reminder>
 ) {
     Box(
         modifier = Modifier
@@ -311,7 +317,7 @@ private fun DisplayList(
                 .padding(10.dp),
             verticalArrangement = Arrangement.Top
         ) {
-            items(items = data.value, itemContent = { item ->
+            items(items = data, itemContent = { item ->
                 Row(
                     modifier = Modifier
                         .padding(10.dp)
@@ -332,15 +338,33 @@ private fun DisplayList(
 //                        modifier = Modifier
 //                            .padding(10.dp)
 //                    )
-                    // TODO: navigate to needed screens
                     Row {
-                        IconButton(onClick = { /*TODO*/ }) {
+                        IconButton(onClick = {
+                            edit.value = item
+                            navController.navigate(ScreenNavigationItem.AddSpending.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                navController.graph.startDestinationRoute?.let { route ->
+                                    popUpTo(route) {
+                                        saveState = true
+                                    }
+                                }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
+                                launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
+                                restoreState = true
+                            }
+                        }) {
                             Icon(
                                 EvaIcons.Fill.Edit, "Edit"
                             )
                         }
                         // TODO: add backend
-                        IconButton(onClick = { /* BACK */ }) {
+                        IconButton(onClick = {
+                            data.remove(item)
+                        }) {
                             Icon(
                                 EvaIcons.Fill.Trash, "Delete"
                             )

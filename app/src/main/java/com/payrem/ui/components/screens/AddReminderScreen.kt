@@ -31,7 +31,7 @@ val numberRegex = Regex("^\\d*\$")
 @Composable
 fun AddReminderScreen(
     context: Context,
-    edit: Reminder = Reminder()
+    editMutable: MutableState<Reminder>
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
     var reminderTitle by remember { mutableStateOf(TextFieldValue()) }
@@ -47,6 +47,8 @@ fun AddReminderScreen(
     var groupId by remember { mutableStateOf(0L) }
     var groupIdLast by remember { mutableStateOf(0L) }
     var groupList by remember { mutableStateOf(listOf<ReminderGroup>()) }
+
+    val edit = editMutable.value
 
     if (edit.getId() != -1L) {
         reminderTitle = TextFieldValue(edit.getTitle())
@@ -107,6 +109,7 @@ fun AddReminderScreen(
                     onClick = {
                         if (edit.getId() != -1L) {
                             /* TODO Edit existing reminder */
+                            editMutable.value = Reminder()
                         }
                         else {
                             /* TODO Add new reminder */

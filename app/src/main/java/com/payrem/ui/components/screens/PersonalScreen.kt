@@ -37,7 +37,8 @@ import compose.icons.evaicons.fill.Trash
 @Composable
 fun PersonalScreen(
     context: Context,
-    navController: NavController
+    navController: NavController,
+    edit: MutableState<Reminder>
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
 
@@ -45,7 +46,8 @@ fun PersonalScreen(
     val scaleButtonPadding = 8
 
     // TODO: create a function to get personal from backend
-    val data = remember { mutableStateOf(BackendService(preferences).getGroupList(groupId)) }
+    val data = remember { mutableListOf<Reminder>() }
+//    data.addAll()
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -55,7 +57,7 @@ fun PersonalScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             DisplayList(
-                scaleButtonWidth, scaleButtonPadding, data, navController
+                scaleButtonWidth, scaleButtonPadding, data, navController, edit
             )
         }
     }
@@ -65,8 +67,9 @@ fun PersonalScreen(
 private fun DisplayList(
     scaleButtonWidth: Int,
     scaleButtonPadding: Int,
-    data: MutableState<List<Reminder>>,
-    navController: NavController
+    data: MutableList<Reminder>,
+    navController: NavController,
+    edit: MutableState<Reminder>
 ) {
     Box(
         modifier = Modifier
@@ -80,7 +83,7 @@ private fun DisplayList(
                 .padding(10.dp),
             verticalArrangement = Arrangement.Top
         ) {
-            items(items = data.value, itemContent = { item ->
+            items(items = data, itemContent = { item ->
                 Row(
                     modifier = Modifier
                         .padding(10.dp)
@@ -104,13 +107,31 @@ private fun DisplayList(
 
                     Row {
                         IconButton(onClick = {
-                            // TODO: navigate to needed screens
+                            edit.value = item
+                            navController.navigate(ScreenNavigationItem.AddSpending.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                navController.graph.startDestinationRoute?.let { route ->
+                                    popUpTo(route) {
+                                        saveState = true
+                                    }
+                                }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
+                                launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
+                                restoreState = true
+                            }
                         }) {
                             Icon(
                                 EvaIcons.Fill.Edit, "Edit"
                             )
                         }
-                        IconButton(onClick = { /*TODO*/ }) {
+                        IconButton(onClick = {
+                            // TODO remove from back
+                            data.remove(item)
+                        }) {
                             Icon(
                                 EvaIcons.Fill.Trash, "Delete"
                             )

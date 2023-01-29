@@ -96,9 +96,7 @@ class Reminder {
         return groupId
     }
 
-    override fun equals(other: Any?): Boolean {
-        return super.equals(other)
-    }
+
 
     override fun hashCode(): Int {
         return super.hashCode()
@@ -106,5 +104,23 @@ class Reminder {
 
     override fun toString(): String {
         return super.toString()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Reminder
+
+        if (id != other.id) return false
+        if (title != other.title) return false
+        if (description != other.description) return false
+        if (frequency != other.frequency) return false
+        if (dateStamp != other.dateStamp) return false
+        if (timeStamp != other.timeStamp) return false
+        if (isGroupReminder != other.isGroupReminder) return false
+        if (groupId != other.groupId) return false
+
+        return true
     }
 }
