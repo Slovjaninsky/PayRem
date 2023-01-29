@@ -10,8 +10,8 @@ fun sendGet(toWhere: String) : String {
     val url = URL(toWhere)
     with(url.openConnection() as HttpURLConnection) {
         requestMethod = "GET"
-        println("Sent 'GET' request to URL : $url; Response Code : $responseCode")
-        if(responseCode == 409 || responseCode == 400){
+//        println("Sent 'GET' request to URL : $url; Response Code : $responseCode")
+        if(responseCode == 409 || responseCode == 400 || responseCode == 404){
             throw ServerException(responseMessage)
         }
         inputStream.bufferedReader().use {
@@ -31,8 +31,8 @@ fun sendPost(toWhere: String, requestBody: String) : String {
         val outputStreamWriter = OutputStreamWriter(outputStream)
         outputStreamWriter.write(requestBody)
         outputStreamWriter.flush()
-        println("Sent 'POST' request to URL : $url, with body : $requestBody; Response Code : $responseCode")
-        if(responseCode == 409 || responseCode == 400){
+//        println("Sent 'POST' request to URL : $url, with body : $requestBody; Response Code : $responseCode")
+        if(responseCode == 409 || responseCode == 400 || responseCode == 404){
             throw ServerException(responseMessage)
         }
         inputStream.bufferedReader().use {
@@ -52,8 +52,8 @@ fun sendPut(toWhere: String, requestBody: String) : String {
         val outputStreamWriter = OutputStreamWriter(outputStream)
         outputStreamWriter.write(requestBody)
         outputStreamWriter.flush()
-        println("Sent 'PUT' request to URL : $url, with body : $requestBody; Response Code : $responseCode")
-        if(responseCode == 409 || responseCode == 400){
+//        println("Sent 'PUT' request to URL : $url, with body : $requestBody; Response Code : $responseCode")
+        if(responseCode == 409 || responseCode == 400 || responseCode == 404){
             throw ServerException(responseMessage)
         }
         inputStream.bufferedReader().use {
@@ -72,8 +72,8 @@ fun sendDelete(toWhere: String) : String {
         setRequestProperty("Content-Type", "application/json")
         val outputStreamWriter = OutputStreamWriter(outputStream)
         outputStreamWriter.flush()
-        println("Sent 'DELETE' request to URL : $url; Response Code : $responseCode")
-        if(responseCode == 409 || responseCode == 400){
+//        println("Sent 'DELETE' request to URL : $url; Response Code : $responseCode")
+        if(responseCode == 409 || responseCode == 400 || responseCode == 404){
             throw ServerException(responseMessage)
         }
         inputStream.bufferedReader().use {
