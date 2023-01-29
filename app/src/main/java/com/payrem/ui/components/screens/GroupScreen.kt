@@ -135,7 +135,7 @@ private fun DisplayGroupSelection(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                val groupList = BackendService(preferences).getAllGroupOfUser(preferences.userId).filter { group -> group.id != preferences.groupId }
+                val groupList = BackendService(preferences).getAllGroupOfUser(preferences.userId)
                 groupList.forEach { group ->
                     DropdownMenuItem(
                         onClick = {
