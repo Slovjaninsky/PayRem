@@ -2,7 +2,6 @@ package com.payrem.ui.components.screens
 
 import android.content.Context
 import android.graphics.Typeface
-import android.os.StrictMode
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -15,10 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.payrem.Preferences
-import com.payrem.backend.api.jsonToExpenseGroup
-import com.payrem.backend.api.sendPost
-
-val currencyRegex = """[A-Z]{0,3}""".toRegex()
+import com.payrem.backend.entities.Group
+import com.payrem.backend.service.BackendService
 
 @Composable
 fun AddGroupScreen(
@@ -29,7 +26,7 @@ fun AddGroupScreen(
     val preferences = rememberSaveable { Preferences(context).read() }
 
     var groupName by remember { mutableStateOf(TextFieldValue()) }
-    var groupCurrency by remember { mutableStateOf(TextFieldValue()) }
+    var groupDescription by remember { mutableStateOf(TextFieldValue()) }
     Column(
         modifier = Modifier
             .padding(10.dp)
@@ -50,14 +47,10 @@ fun AddGroupScreen(
                 .fillMaxWidth()
         )
         TextField(
-            value = groupCurrency,
-            onValueChange = { newGroupCurrency ->
-                if (currencyRegex.matches(newGroupCurrency.text)) {
-                    groupCurrency = newGroupCurrency
-                }
-            },
+            value = groupDescription,
+            onValueChange = { newGroupDesc -> groupDescription = newGroupDesc},
             label = {
-                Text(text = "Currency")
+                Text(text = "Description")
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -78,7 +71,7 @@ fun AddGroupScreen(
             }
             Button(
                 onClick = {
-                    if (groupCurrency.text.length != 3 || groupName.text.isBlank()) {
+                    if (groupDescription.text.isBlank() || groupName.text.isBlank()) {
                         ContextCompat.getMainExecutor(context).execute {
                             Toast.makeText(
                                 context,
@@ -88,12 +81,7 @@ fun AddGroupScreen(
                         }
                         return@Button
                     }
-                    val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-                    StrictMode.setThreadPolicy(policy)
-                    val group = jsonToExpenseGroup(sendPost(
-                        "http://${preferences.serverIp}/users/${preferences.userId}/groups",
-                        "{\"currency\": \"${groupCurrency.text}\", \"name\": \"${groupName.text}\"}"
-                    ))
+                    BackendService(preferences).createGroup(Group(-1, groupName.text, groupDescription.text))
                     ContextCompat.getMainExecutor(context).execute {
                         Toast.makeText(
                             context,
@@ -102,7 +90,6 @@ fun AddGroupScreen(
                         ).show()
                     }
                     dialogController.value = !dialogController.value
-                    onCreate(group.getId())
                 },
                 modifier = Modifier
                     .padding(1.dp)

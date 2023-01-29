@@ -53,7 +53,10 @@ fun GroupScreen(
     var userAddedSwitcher by rememberSaveable { mutableStateOf(false) }
 
     val data = remember { mutableListOf<Reminder>() }
-    data.addAll(BackendService(preferences).getAllRemindersOfUser(preferences.userId))
+
+    if (groupId != -1L) {
+        data.addAll(BackendService(preferences).getAllRemindersOfGroup(groupId))
+    }
 
     Column(
         modifier = Modifier
@@ -287,7 +290,7 @@ private fun DisplayMembers(
                 .align(Alignment.CenterHorizontally),
             contentAlignment = Center
         ) {
-            // list of group reminders here
+            // TODO list of group members here
         }
     }
 }
@@ -325,13 +328,6 @@ private fun DisplayList(
                         modifier = Modifier
                             .padding(10.dp)
                     )
-//                    Text(
-//                        text = "${item.getAmount()} ${BackendService(preferences).getGroupById(groupId).getCurrency()}",
-//                        fontSize = 14.sp,
-//                        color = Color.hsl(358f, 0.63f, 0.49f),
-//                        modifier = Modifier
-//                            .padding(10.dp)
-//                    )
                     Row {
                         IconButton(onClick = {
                             edit.value = item
