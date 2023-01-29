@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import com.payrem.backend.service.BackendService
 import com.payrem.backend.api.jsonToApplicationUser
 import com.payrem.backend.api.sendGet
@@ -31,10 +32,15 @@ import com.payrem.Preferences
 import com.payrem.PreferencesData
 import com.payrem.backend.entities.Reminder
 import com.payrem.backend.exceptions.ServerException
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Fill
+import compose.icons.evaicons.fill.Edit
+import compose.icons.evaicons.fill.Trash
 
 @Composable
 fun GroupScreen(
-    context: Context
+    context: Context,
+    navController: NavController
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
 
@@ -43,6 +49,7 @@ fun GroupScreen(
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) } // selected index of tab
     var groupId by rememberSaveable { mutableStateOf(-1L) }
     var userAddedSwitcher by rememberSaveable { mutableStateOf(false) }
+    val data = remember { mutableStateOf(BackendService(preferences).getGroupList(groupId)) }
 
     Column(
         modifier = Modifier
@@ -63,7 +70,7 @@ fun GroupScreen(
                 .fillMaxSize()
         ) {
             if (selectedTabIndex == 0) {
-                DisplayList(preferences, groupId, BackendService(preferences).getGroupList(groupId))
+                DisplayList(preferences, groupId, data, navController)
             } else {
                 DisplayMembers(preferences, groupId, userAddedSwitcher) {
                     userAddedSwitcher = !userAddedSwitcher
@@ -290,7 +297,8 @@ private fun DisplayMembers(
 private fun DisplayList(
     preferences: PreferencesData,
     groupId: Long,
-    data: List<Reminder>
+    data:  MutableState<List<Reminder>>,
+    navController: NavController
 ) {
     Box(
         modifier = Modifier
@@ -303,7 +311,7 @@ private fun DisplayList(
                 .padding(10.dp),
             verticalArrangement = Arrangement.Top
         ) {
-            items(items = data, itemContent = { item ->
+            items(items = data.value, itemContent = { item ->
                 Row(
                     modifier = Modifier
                         .padding(10.dp)
@@ -311,7 +319,33 @@ private fun DisplayList(
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-
+                    Text(
+                        text = item.getTitle(),
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .padding(10.dp)
+                    )
+//                    Text(
+//                        text = "${item.getAmount()} ${BackendService(preferences).getGroupById(groupId).getCurrency()}",
+//                        fontSize = 14.sp,
+//                        color = Color.hsl(358f, 0.63f, 0.49f),
+//                        modifier = Modifier
+//                            .padding(10.dp)
+//                    )
+                    // TODO: navigate to needed screens
+                    Row {
+                        IconButton(onClick = { /*TODO*/ }) {
+                            Icon(
+                                EvaIcons.Fill.Edit, "Edit"
+                            )
+                        }
+                        // TODO: add backend
+                        IconButton(onClick = { /* BACK */ }) {
+                            Icon(
+                                EvaIcons.Fill.Trash, "Delete"
+                            )
+                        }
+                    }
                 }
             })
         }
