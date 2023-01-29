@@ -112,7 +112,11 @@ fun SignInScreen(context: Context, navController: NavController) {
                             }
                         }
                         try {
-                            BackendService(preferences).login(login.value, password.value)
+                            val userFromBack = BackendService(preferences).login(login.value, password.value)
+
+                            val preferencesData = PreferencesData("",  userFromBack.id)
+
+                            Preferences(context).write(preferencesData)
 
                             context.startActivity(Intent(context, MainActivity::class.java))
                         } catch (error: Exception) {
@@ -213,12 +217,11 @@ fun SignUpMailScreen(context: Context, navController: NavController) {
                             }
                             val user = ApplicationUser(password.value, username.value, "", email.value)
 
-                            BackendService(preferences).createUser(user)
+                            val userFromBack = BackendService(preferences).createUser(user)
 
-                            val preferencesData = PreferencesData("",  user.id)
+                            val preferencesData = PreferencesData("",  userFromBack.id)
 
                             Preferences(context).write(preferencesData)
-
 
                             context.startActivity(Intent(context, MainActivity::class.java))
                         } catch (error: Exception) {
