@@ -10,6 +10,8 @@ class Reminder {
     var userId: Long = -1
     var groupId: Long = -1
 
+    constructor()
+
     constructor(
         id: Long,
         name: String,

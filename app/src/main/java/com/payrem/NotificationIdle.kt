@@ -11,7 +11,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.payrem.backend.api.jsonArrayToNotification
+//import com.payrem.backend.api.jsonArrayToNotification
 import com.payrem.backend.api.sendGet
 
 class NotificationIdle(val context: Context, workerParams: WorkerParameters) : Worker(
@@ -27,30 +27,30 @@ class NotificationIdle(val context: Context, workerParams: WorkerParameters) : W
             val preferences = Preferences(context).read()
             val mainLooper = Looper.getMainLooper()
 
-            val notifications = jsonArrayToNotification(
-                sendGet(
-                    "http://${preferences.serverIp}/users/${
-                        preferences.userId
-                    }/notifications"
-                )
-            )
-
-            if (notifications.isNotEmpty()) {
-                for (notification in notifications) {
-                    if (notification.getUserId().toString() == preferences.userId &&
-                        notification.getAmount() < 0
-                    ) {
-                        Handler(mainLooper).post {
-                            if (notification.getExpenseId() != -1L) {
-                                sendNotification("Added new expense")
-                            }
-                            if (notification.getGroupId() != -1L) {
-                                sendNotification("Added to new group")
-                            }
-                        }
-                    }
-                }
-            }
+//            val notifications = jsonArrayToNotification(
+//                sendGet(
+//                    "http://${preferences.serverIp}/users/${
+//                        preferences.userId
+//                    }/notifications"
+//                )
+//            )
+//
+//            if (notifications.isNotEmpty()) {
+//                for (notification in notifications) {
+//                    if (notification.getUserId().toString() == preferences.userId &&
+//                        notification.getAmount() < 0
+//                    ) {
+//                        Handler(mainLooper).post {
+//                            if (notification.getExpenseId() != -1L) {
+//                                sendNotification("Added new expense")
+//                            }
+//                            if (notification.getGroupId() != -1L) {
+//                                sendNotification("Added to new group")
+//                            }
+//                        }
+//                    }
+//                }
+//            }
             Result.success()
         } catch (ignored: Throwable) {
             Result.failure()

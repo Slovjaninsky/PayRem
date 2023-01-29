@@ -52,9 +52,8 @@ fun GroupScreen(
     var groupId by rememberSaveable { mutableStateOf(-1L) }
     var userAddedSwitcher by rememberSaveable { mutableStateOf(false) }
 
-    // TODO: create a function to get personal from backend
     val data = remember { mutableListOf<Reminder>() }
-//    data.addAll()
+    data.addAll(BackendService(preferences).getAllRemindersOfUser(preferences.userId))
 
     Column(
         modifier = Modifier
@@ -75,7 +74,9 @@ fun GroupScreen(
                 .fillMaxSize()
         ) {
             if (selectedTabIndex == 0) {
-                DisplayList(preferences, groupId, data, navController, edit)
+                DisplayList(
+                    preferences, groupId, data, navController, edit
+                )
             } else {
                 DisplayMembers(preferences, groupId, userAddedSwitcher) {
                     userAddedSwitcher = !userAddedSwitcher
@@ -109,7 +110,7 @@ private fun DisplayGroupSelection(
                 .fillMaxWidth()
         ) {
             TextField(
-                value = if(groupId == -1L) "" else BackendService(preferences).getGroupById(groupId).getName(),
+                value = if(groupId == -1L) "" else BackendService(preferences).getGroupById(groupId).name,
                 onValueChange = { },
                 readOnly = true,
                 label = {
@@ -131,18 +132,18 @@ private fun DisplayGroupSelection(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                val groupList = BackendService(preferences).getGroups().filter { group -> group.getId() != preferences.groupId }
+                val groupList = BackendService(preferences).getAllGroupOfUser(preferences.userId).filter { group -> group.id != preferences.groupId }
                 groupList.forEach { group ->
                     DropdownMenuItem(
                         onClick = {
-                            onSwitch(group.getId())
+                            onSwitch(group.id)
                             expandedDropdownGroups = false
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(10.dp)
                     ) {
-                        Text(text = group.getName())
+                        Text(text = group.name)
                     }
                 }
             }
@@ -210,14 +211,7 @@ private fun DisplayInviteFields(
                     return@Button
                 }
                 try{
-                    val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-                    StrictMode.setThreadPolicy(policy)
-                    val getUserByEmailResponse = sendGet("http://${preferences.serverIp}/users/email/${email.text}")
-                    val user = jsonToApplicationUser(getUserByEmailResponse)
-                    sendPost(
-                        "http://${preferences.serverIp}/users/${user.getId()}/groups",
-                        "{\"id\": ${groupId}}"
-                    )
+                    BackendService(preferences).addUserToGroup(preferences.userId, groupId)
                     ContextCompat.getMainExecutor(context).execute {
                         Toast.makeText(
                             context,
@@ -282,7 +276,7 @@ private fun DisplayMembers(
             .fillMaxSize()
             .verticalScroll(
                 rememberScrollState(),
-                flingBehavior = null // TODO: disable
+                flingBehavior = null
             )
     ) {
         DisplayInviteFields(preferences, groupId, onUserAdd)
@@ -326,7 +320,7 @@ private fun DisplayList(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = item.getTitle(),
+                        text = item.name,
                         fontSize = 14.sp,
                         modifier = Modifier
                             .padding(10.dp)
@@ -361,9 +355,9 @@ private fun DisplayList(
                                 EvaIcons.Fill.Edit, "Edit"
                             )
                         }
-                        // TODO: add backend
                         IconButton(onClick = {
                             data.remove(item)
+                            BackendService(preferences).deleteReminderFromGroup(groupId, item.id)
                         }) {
                             Icon(
                                 EvaIcons.Fill.Trash, "Delete"
