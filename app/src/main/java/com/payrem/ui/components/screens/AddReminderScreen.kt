@@ -413,7 +413,6 @@ fun AddReminderScreen(
                         isGroupReminder = !isGroupReminder
                         groupList = BackendService(preferences)
                             .getAllGroupOfUser(preferences.userId)
-                            .filter { group -> group.id != preferences.groupId }
                         if (isGroupReminder) {
                             groupId = groupIdLast
                         } else {
