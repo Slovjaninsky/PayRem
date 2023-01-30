@@ -58,6 +58,7 @@ fun GroupScreen(
     var groupUsers: List<ApplicationUser> = listOf<ApplicationUser>()
 
     if (groupId != -1L) {
+        data.clear()
         data.addAll(BackendService(preferences).getAllRemindersOfGroup(groupId))
         groupUsers = BackendService(preferences).getAllUsersOfGroup(groupId)
     }
@@ -378,8 +379,38 @@ private fun DisplayList(
                             )
                         }
                         IconButton(onClick = {
-                            data.remove(item)
                             BackendService(preferences).deleteReminderFromGroup(groupId, item.id)
+                            data.remove(item)
+                            navController.navigate(ScreenNavigationItem.Personal.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                navController.graph.startDestinationRoute?.let { route ->
+                                    popUpTo(route) {
+                                        saveState = true
+                                    }
+                                }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
+                                launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
+                                restoreState = true
+                            }
+                            navController.navigate(ScreenNavigationItem.Group.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                navController.graph.startDestinationRoute?.let { route ->
+                                    popUpTo(route) {
+                                        saveState = true
+                                    }
+                                }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
+                                launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
+                                restoreState = true
+                            }
                         }) {
                             Icon(
                                 EvaIcons.Fill.Trash, "Delete"
