@@ -1,7 +1,7 @@
 package com.payrem.backend.entities
 
 class Reminder {
-    var id: Long = -1
+    var id: Long = -1L
     var name: String = ""
     var description: String = ""
     var date: String = "2000-01-01"

@@ -31,7 +31,7 @@ import compose.icons.evaicons.fill.Trash
 fun PersonalScreen(
     context: Context,
     navController: NavController,
-    edit: MutableState<Reminder>
+    editCallback: (edit: Reminder) -> Unit
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
 
@@ -39,7 +39,11 @@ fun PersonalScreen(
     val scaleButtonPadding = 8
 
     val data = remember { mutableListOf<Reminder>() }
+    if (data.isNotEmpty()) {
+        data.clear()
+    }
     data.addAll(BackendService(preferences).getAllRemindersOfUser(preferences.userId))
+    print(data)
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -49,7 +53,7 @@ fun PersonalScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             DisplayList(
-                scaleButtonWidth, scaleButtonPadding, data, navController, edit
+                scaleButtonWidth, scaleButtonPadding, data, navController, editCallback
             ) { reminderId ->
                 BackendService(preferences).deleteReminderFromUser(preferences.userId, reminderId)
             }
@@ -63,13 +67,12 @@ private fun DisplayList(
     scaleButtonPadding: Int,
     data: MutableList<Reminder>,
     navController: NavController,
-    edit: MutableState<Reminder>,
+    editCallback: (edit: Reminder) -> Unit,
     delete: (reminderId: Long) -> Unit
 ) {
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .padding((scaleButtonWidth + scaleButtonPadding).dp, 0.dp, 0.dp, 0.dp),
+            .fillMaxSize(),
         contentAlignment = TopCenter
     ) {
         LazyColumn(
@@ -102,7 +105,7 @@ private fun DisplayList(
 
                     Row {
                         IconButton(onClick = {
-                            edit.value = item
+                            editCallback(item)
                             navController.navigate(ScreenNavigationItem.AddSpending.route) {
                                 // Pop up to the start destination of the graph to
                                 // avoid building up a large stack of destinations

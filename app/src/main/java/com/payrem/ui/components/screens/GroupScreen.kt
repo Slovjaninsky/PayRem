@@ -30,6 +30,7 @@ import com.payrem.backend.api.sendGet
 import com.payrem.backend.api.sendPost
 import com.payrem.Preferences
 import com.payrem.PreferencesData
+import com.payrem.backend.entities.ApplicationUser
 import com.payrem.backend.entities.Reminder
 import com.payrem.backend.exceptions.ServerException
 import com.payrem.ui.components.screens.navigation.ScreenNavigationItem
@@ -42,7 +43,7 @@ import compose.icons.evaicons.fill.Trash
 fun GroupScreen(
     context: Context,
     navController: NavController,
-    edit: MutableState<Reminder>
+    editCallback: (edit: Reminder) -> Unit
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
 
@@ -54,9 +55,14 @@ fun GroupScreen(
 
     val data = remember { mutableListOf<Reminder>() }
 
+    var groupUsers: List<ApplicationUser> = listOf<ApplicationUser>()
+
     if (groupId != -1L) {
         data.addAll(BackendService(preferences).getAllRemindersOfGroup(groupId))
+        groupUsers = BackendService(preferences).getAllUsersOfGroup(groupId)
     }
+
+
 
     Column(
         modifier = Modifier
@@ -78,10 +84,10 @@ fun GroupScreen(
         ) {
             if (selectedTabIndex == 0) {
                 DisplayList(
-                    preferences, groupId, data, navController, edit
+                    preferences, groupId, data, navController, editCallback
                 )
             } else {
-                DisplayMembers(preferences, groupId, userAddedSwitcher) {
+                DisplayMembers(preferences, groupId, userAddedSwitcher, groupUsers) {
                     userAddedSwitcher = !userAddedSwitcher
                 }
             }
@@ -271,16 +277,13 @@ private fun DisplayMembers(
     preferences: PreferencesData,
     groupId: Long,
     userAdded: Boolean,
+    groupUsers: List<ApplicationUser>,
     onUserAdd: () -> Unit
 ) {
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(
-                rememberScrollState(),
-                flingBehavior = null
-            )
     ) {
         DisplayInviteFields(preferences, groupId, onUserAdd)
         Box(
@@ -290,7 +293,30 @@ private fun DisplayMembers(
                 .align(Alignment.CenterHorizontally),
             contentAlignment = Center
         ) {
-            // TODO list of group members here
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.Top
+            ) {
+                items(items = groupUsers, itemContent = { item ->
+                    Row(
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .background(Color.LightGray)
+                            .fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = item.name,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .padding(10.dp)
+                        )
+                    }
+                })
+            }
+
+
         }
     }
 }
@@ -301,7 +327,7 @@ private fun DisplayList(
     groupId: Long,
     data:  MutableList<Reminder>,
     navController: NavController,
-    edit: MutableState<Reminder>
+    editCallback: (edit: Reminder) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -330,7 +356,7 @@ private fun DisplayList(
                     )
                     Row {
                         IconButton(onClick = {
-                            edit.value = item
+                            editCallback(item)
                             navController.navigate(ScreenNavigationItem.AddSpending.route) {
                                 // Pop up to the start destination of the graph to
                                 // avoid building up a large stack of destinations
@@ -364,4 +390,5 @@ private fun DisplayList(
             })
         }
     }
+
 }

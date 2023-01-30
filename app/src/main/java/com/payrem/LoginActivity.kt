@@ -66,7 +66,7 @@ fun MainSignInScreen() {
         },
         content = { padding -> // We have to pass the scaffold inner padding to our content. That's why we use Box.
             Box(modifier = Modifier.padding(padding)) {
-                ScreenNavigation(navController, LocalContext.current, ScreenNavigationItem.SignIn.route)
+                ScreenNavigation(navController, LocalContext.current, ScreenNavigationItem.SignIn.route){}
             }
         }
     )

@@ -34,7 +34,7 @@ val periodsMap = mapOf("Day" to 1, "Month" to -1, "Year" to -12)
 @Composable
 fun AddReminderScreen(
     context: Context,
-    editMutable: MutableState<Reminder>
+    edit: Reminder
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
     var reminderTitle by remember { mutableStateOf(TextFieldValue()) }
@@ -47,13 +47,12 @@ fun AddReminderScreen(
     var expandedDropDownRecurrence by remember { mutableStateOf(false) }
     var expandedDropdownGroups by remember { mutableStateOf(false) }
     var groupName by remember { mutableStateOf("") }
-    var groupId by remember { mutableStateOf(0L) }
-    var groupIdLast by remember { mutableStateOf(0L) }
+    var groupId by remember { mutableStateOf(-1L) }
+    var groupIdLast by remember { mutableStateOf(-1L) }
     var groupList by remember { mutableStateOf(listOf<Group>()) }
 
-    val edit = editMutable.value
 
-    if (edit.id != -1L) {
+    if (edit.id != -1L && reminderDate.value == "") {
         reminderTitle = TextFieldValue(edit.name)
         reminderDescription = TextFieldValue(edit.description)
         reminderDate.value = edit.date
@@ -67,8 +66,14 @@ fun AddReminderScreen(
             else
                 TextFieldValue("Month")
         isGroupReminder = (edit.groupId != -1L)
-        groupId = edit.groupId
-        groupName = BackendService(preferences).getGroupById(edit.groupId).name
+        if (isGroupReminder) {
+            groupId = edit.groupId
+            groupName = BackendService(preferences).getGroupById(edit.groupId).name
+        } else {
+            groupId = -1L
+            groupName = ""
+        }
+
     }
 
     Column(
@@ -221,7 +226,7 @@ fun AddReminderScreen(
                                     edit.period = reminderRecurrenceNumber.text.toLong() *
                                             periodsMap[reminderRecurrencePeriod.text]!!
                                     edit.groupId = groupId
-                                    BackendService(preferences).addReminderToUser(preferences.userId, edit)
+                                    BackendService(preferences).addReminderToGroup(groupId, edit)
                                     ContextCompat.getMainExecutor(context).execute {
                                         Toast.makeText(
                                             context,
@@ -258,7 +263,7 @@ fun AddReminderScreen(
                                     edit.time = reminderTime.value
                                     edit.period = reminderRecurrenceNumber.text.toLong() *
                                             periodsMap[reminderRecurrencePeriod.text]!!
-                                    BackendService(preferences).addReminderToGroup(groupId, edit)
+                                    BackendService(preferences).addReminderToUser(preferences.userId, edit)
                                     ContextCompat.getMainExecutor(context).execute {
                                         Toast.makeText(
                                             context,

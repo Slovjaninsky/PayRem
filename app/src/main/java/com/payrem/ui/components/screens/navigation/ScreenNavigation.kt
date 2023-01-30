@@ -21,14 +21,15 @@ fun ScreenNavigation(
     navController: NavHostController,
     context: Context,
     startDestination: String,
-    edit: MutableState<Reminder> = mutableStateOf(Reminder())
+    edit: Reminder = Reminder(),
+    editCallback: (edit: Reminder) -> Unit,
 ) {
     NavHost(navController, startDestination = startDestination) {
         composable(ScreenNavigationItem.Personal.route) {
-            PersonalScreen(context, navController, edit)
+            PersonalScreen(context, navController, editCallback)
         }
         composable(ScreenNavigationItem.Group.route) {
-            GroupScreen(context, navController, edit)
+            GroupScreen(context, navController, editCallback)
         }
         composable(ScreenNavigationItem.AddSpending.route) {
             AddReminderScreen(context, edit)
