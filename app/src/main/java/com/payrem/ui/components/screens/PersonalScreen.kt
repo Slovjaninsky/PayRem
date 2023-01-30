@@ -10,6 +10,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment.Companion.TopCenter
@@ -38,12 +39,10 @@ fun PersonalScreen(
     val scaleButtonWidth = 50
     val scaleButtonPadding = 8
 
-    val data = remember { mutableListOf<Reminder>() }
-    if (data.isNotEmpty()) {
-        data.clear()
-    }
+    var flag = remember {mutableStateOf(true)}
+    var data = rememberSaveable { mutableListOf<Reminder>() }
+    data.clear()
     data.addAll(BackendService(preferences).getAllRemindersOfUser(preferences.userId))
-    print(data)
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -54,8 +53,38 @@ fun PersonalScreen(
         ) {
             DisplayList(
                 scaleButtonWidth, scaleButtonPadding, data, navController, editCallback
-            ) { reminderId ->
+            ){ reminderId ->
                 BackendService(preferences).deleteReminderFromUser(preferences.userId, reminderId)
+                navController.navigate(ScreenNavigationItem.Group.route) {
+                    // Pop up to the start destination of the graph to
+                    // avoid building up a large stack of destinations
+                    // on the back stack as users select items
+                    navController.graph.startDestinationRoute?.let { route ->
+                        popUpTo(route) {
+                            saveState = true
+                        }
+                    }
+                    // Avoid multiple copies of the same destination when
+                    // reselecting the same item
+                    launchSingleTop = true
+                    // Restore state when reselecting a previously selected item
+                    restoreState = true
+                }
+                navController.navigate(ScreenNavigationItem.Personal.route) {
+                    // Pop up to the start destination of the graph to
+                    // avoid building up a large stack of destinations
+                    // on the back stack as users select items
+                    navController.graph.startDestinationRoute?.let { route ->
+                        popUpTo(route) {
+                            saveState = true
+                        }
+                    }
+                    // Avoid multiple copies of the same destination when
+                    // reselecting the same item
+                    launchSingleTop = true
+                    // Restore state when reselecting a previously selected item
+                    restoreState = true
+                }
             }
         }
     }
@@ -68,7 +97,7 @@ private fun DisplayList(
     data: MutableList<Reminder>,
     navController: NavController,
     editCallback: (edit: Reminder) -> Unit,
-    delete: (reminderId: Long) -> Unit
+    delete: (reminderId: Long) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -127,7 +156,6 @@ private fun DisplayList(
                             )
                         }
                         IconButton(onClick = {
-                            data.remove(item)
                             delete(item.id)
                         }) {
                             Icon(

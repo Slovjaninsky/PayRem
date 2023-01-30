@@ -24,6 +24,7 @@ fun TopAppBar(
         actions = {
             if (logout) {
                 IconButton(onClick = {
+                    Preferences(context).write(PreferencesData("", -1))
                     context.startActivity(Intent(context, LoginActivity::class.java))
                 }) {
                     Icon(EvaIcons.Fill.LogOut, "Logout")

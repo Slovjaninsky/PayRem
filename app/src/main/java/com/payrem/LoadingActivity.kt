@@ -50,7 +50,7 @@ fun LoadingScreen() {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             )  {
-                Text(text = "ReBalance", fontSize = 30.sp, modifier = Modifier.padding(90.dp))
+                Text(text = "PayRem", fontSize = 30.sp, modifier = Modifier.padding(90.dp))
                 if (isLoading.value) {
                     CircularProgressIndicator()
                 }
@@ -63,7 +63,11 @@ fun LoadingScreen() {
     }
 
     if (connected.value == 1) {
-        context.startActivity(Intent(context, MainActivity::class.java))
+        if (!preferences.exists()) {
+            context.startActivity(Intent(context, LoginActivity::class.java))
+        } else {
+            context.startActivity(Intent(context, MainActivity::class.java))
+        }
     }
     else if (connected.value == -1) {
         ContextCompat.getMainExecutor(context).execute {
