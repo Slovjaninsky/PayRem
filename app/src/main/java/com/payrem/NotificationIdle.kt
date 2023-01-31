@@ -14,6 +14,7 @@ import androidx.work.WorkerParameters
 import com.payrem.backend.entities.Reminder
 //import com.payrem.backend.api.jsonArrayToNotification
 import com.payrem.backend.service.BackendService
+import java.time.LocalDateTime
 
 class NotificationIdle(val context: Context, workerParams: WorkerParameters) : Worker(
     context,
@@ -57,8 +58,12 @@ class NotificationIdle(val context: Context, workerParams: WorkerParameters) : W
     }
 
     private fun checkReminder(reminder: Reminder): Boolean {
-        //TODO: add here check if reminder should be showed
-        return true
+        val reminderTime = LocalDateTime.parse(reminder.date +"T" + reminder.time + ":00")
+        val current = LocalDateTime.now()
+
+        return reminderTime.year == current.year && reminderTime.month == current.month
+                && reminderTime.dayOfMonth == current.dayOfMonth && reminderTime.hour == current.hour
+                && reminderTime.minute == current.minute
     }
 
     private fun createNotificationChannel() {
