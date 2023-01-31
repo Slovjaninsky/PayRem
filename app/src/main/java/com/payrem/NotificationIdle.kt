@@ -25,37 +25,46 @@ class NotificationIdle(val context: Context, workerParams: WorkerParameters) : W
     private var notificationId = 0
 
     override fun doWork(): Result {
-        return try {
-            createNotificationChannel()
-            val preferences = Preferences(context).read()
-            val mainLooper = Looper.getMainLooper()
+        for(i in 1..15) {
+            try {
+                createNotificationChannel()
+                val preferences = Preferences(context).read()
+                val mainLooper = Looper.getMainLooper()
 
-            var remindersForUser = BackendService(preferences).getAllRemindersOfUser(preferences.userId)
+                var remindersForUser =
+                    BackendService(preferences).getAllRemindersOfUser(preferences.userId)
 
-            for (reminder in remindersForUser) {
-                if (checkReminder(reminder)) {
-                    Handler(mainLooper).post {
-                        sendNotification(reminder.name)
+                for (reminder in remindersForUser) {
+                    if (checkReminder(reminder)) {
+                        Handler(mainLooper).post {
+                            sendNotification(reminder.name)
+                        }
                     }
                 }
-            }
 
-            val remindersForGroup = ArrayList<Reminder>()
-            for (group in BackendService(preferences).getAllGroupOfUser(preferences.userId)) {
-                remindersForGroup.addAll(BackendService(preferences).getAllRemindersOfGroup(group.id))
-            }
+                val remindersForGroup = ArrayList<Reminder>()
+                for (group in BackendService(preferences).getAllGroupOfUser(preferences.userId)) {
+                    remindersForGroup.addAll(
+                        BackendService(preferences).getAllRemindersOfGroup(
+                            group.id
+                        )
+                    )
+                }
 
-            for (reminder in remindersForGroup) {
-                if (checkReminder(reminder)) {
-                    Handler(mainLooper).post {
-                        sendNotification(reminder.name)
+                for (reminder in remindersForGroup) {
+                    if (checkReminder(reminder)) {
+                        Handler(mainLooper).post {
+                            sendNotification(reminder.name)
+                        }
                     }
                 }
+//                Result.success()
+            } catch (ignored: Throwable) {
+//                Result.failure()
             }
-            Result.success()
-        } catch (ignored: Throwable) {
-            Result.failure()
+            Thread.sleep(60_000)
         }
+        return Result.success()
     }
 
     private fun checkReminder(reminder: Reminder): Boolean {

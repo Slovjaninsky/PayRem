@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PayRemTheme {
                 val recurringWork: PeriodicWorkRequest =
-                    PeriodicWorkRequest.Builder(NotificationIdle::class.java, 1, TimeUnit.MINUTES)
+                    PeriodicWorkRequest.Builder(NotificationIdle::class.java, 15, TimeUnit.MINUTES)
                         .build()
                 workManager.enqueue(recurringWork)
 
