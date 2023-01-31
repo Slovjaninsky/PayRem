@@ -10,7 +10,7 @@ import org.junit.Test
 class Tests {
     @get:Rule
     val composeTestRule = createComposeRule()
-    var id = 1
+    var id = 4
 
     @Test
     fun signInNavigation() {
@@ -73,8 +73,8 @@ class Tests {
 
         composeTestRule.onNodeWithText("SIGN UP").performClick()
 
-        composeTestRule.onNodeWithText("E-mail").performTextInput("test_user_assertion@gmail.com")
-        composeTestRule.onNodeWithText("Username").performTextInput("test_user_assertion")
+        composeTestRule.onNodeWithText("E-mail").performTextInput("test_user_assertion${id}@gmail.com")
+        composeTestRule.onNodeWithText("Username").performTextInput("test_user_assertion${id}")
         composeTestRule.onNodeWithText("Password").performTextInput("pass")
         composeTestRule.onNodeWithText("Repeat password").performTextInput("pass")
 
@@ -126,7 +126,7 @@ class Tests {
 
         composeTestRule.onNodeWithText("Invite").assertIsDisplayed()
 
-        composeTestRule.onNodeWithContentDescription("Add spending").performClick()
+        composeTestRule.onNodeWithContentDescription("Add new reminder").performClick()
 
         composeTestRule.onNodeWithText("Title").assertIsDisplayed()
 
@@ -215,6 +215,8 @@ class Tests {
         composeTestRule.onNodeWithText("Name").performTextInput("assertion_test_group${id}")
         composeTestRule.onNodeWithText("Description").performTextInput("assertion_test_group${id}")
         composeTestRule.onNodeWithText("Save").performClick()
+
+        composeTestRule.onNodeWithText("Members").performClick()
 
         composeTestRule.onNodeWithText("Email").performTextInput("user.3@gmail.com")
         composeTestRule.onNodeWithText("Invite").performClick()
