@@ -15,12 +15,13 @@ import com.payrem.backend.entities.Reminder
 //import com.payrem.backend.api.jsonArrayToNotification
 import com.payrem.backend.service.BackendService
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class NotificationIdle(val context: Context, workerParams: WorkerParameters) : Worker(
     context,
     workerParams
 ) {
-    private val channelId = "ReBalance"
+    private val channelId = "PayRem"
     private var notificationId = 0
 
     override fun doWork(): Result {
@@ -58,12 +59,43 @@ class NotificationIdle(val context: Context, workerParams: WorkerParameters) : W
     }
 
     private fun checkReminder(reminder: Reminder): Boolean {
-        val reminderTime = LocalDateTime.parse(reminder.date +"T" + reminder.time + ":00")
+        /* val reminderTime = LocalDateTime.parse(reminder.date +"T" + reminder.time + ":00")
         val current = LocalDateTime.now()
 
         return reminderTime.year == current.year && reminderTime.month == current.month
                 && reminderTime.dayOfMonth == current.dayOfMonth && reminderTime.hour == current.hour
-                && reminderTime.minute == current.minute
+                && reminderTime.minute == current.minute */
+
+        var reminderTime = LocalDateTime.parse(reminder.date +"T" + reminder.time)
+        val current = LocalDateTime.now()
+        val period = reminder.period
+
+        if (period == 0L) {
+            return reminderTime.year == current.year && reminderTime.month == current.month
+                    && reminderTime.dayOfMonth == current.dayOfMonth && reminderTime.hour == current.hour
+                    && reminderTime.minute == current.minute
+        }
+        else if (period > 0) {
+            while (reminderTime <= current.truncatedTo(ChronoUnit.MINUTES)) {
+                if (reminderTime.year == current.year && reminderTime.month == current.month
+                    && reminderTime.dayOfMonth == current.dayOfMonth && reminderTime.hour == current.hour
+                    && reminderTime.minute == current.minute) {
+                    return true
+                }
+                reminderTime = reminderTime.plusDays(reminder.period)
+            }
+        }
+        else {
+            while (reminderTime <= current.truncatedTo(ChronoUnit.MINUTES)) {
+                if (reminderTime.year == current.year && reminderTime.month == current.month
+                    && reminderTime.dayOfMonth == current.dayOfMonth && reminderTime.hour == current.hour
+                    && reminderTime.minute == current.minute) {
+                    return true
+                }
+                reminderTime = reminderTime.plusMonths(-reminder.period)
+            }
+        }
+        return false
     }
 
     private fun createNotificationChannel() {
@@ -91,7 +123,7 @@ class NotificationIdle(val context: Context, workerParams: WorkerParameters) : W
 
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(androidx.core.R.drawable.notification_template_icon_bg)
-            .setContentTitle("ReBalance")
+            .setContentTitle("PayRem")
             .setContentText(textContent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)

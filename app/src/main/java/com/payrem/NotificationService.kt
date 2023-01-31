@@ -15,7 +15,7 @@ import com.payrem.backend.api.sendGet
 class NotificationService(
     val context: Context
 ) {
-    private val channelId = "ReBalance"
+    private val channelId = "PayRem"
     private var notificationId = 0
 
     fun start() {
@@ -56,8 +56,8 @@ class NotificationService(
     }
 
     private fun createNotificationChannel() {
-        val name = "ReBalance"
-        val descriptionText = "ReBalance main channel"
+        val name = "PayRem"
+        val descriptionText = "PayRem main channel"
         val importance = NotificationManager.IMPORTANCE_DEFAULT
         val channel = NotificationChannel(channelId, name, importance).apply {
             description = descriptionText
@@ -79,7 +79,7 @@ class NotificationService(
 
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(androidx.core.R.drawable.notification_template_icon_bg)
-            .setContentTitle("ReBalance")
+            .setContentTitle("PayRem")
             .setContentText(textContent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
