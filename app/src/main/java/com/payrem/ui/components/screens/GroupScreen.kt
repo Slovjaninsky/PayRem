@@ -30,6 +30,7 @@ import com.payrem.backend.api.sendGet
 import com.payrem.backend.api.sendPost
 import com.payrem.Preferences
 import com.payrem.PreferencesData
+import com.payrem.backend.entities.ApplicationUser
 import com.payrem.backend.entities.Reminder
 import com.payrem.backend.exceptions.ServerException
 import com.payrem.ui.components.screens.navigation.ScreenNavigationItem
@@ -42,7 +43,7 @@ import compose.icons.evaicons.fill.Trash
 fun GroupScreen(
     context: Context,
     navController: NavController,
-    edit: MutableState<Reminder>
+    editCallback: (edit: Reminder) -> Unit
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
 
@@ -52,9 +53,17 @@ fun GroupScreen(
     var groupId by rememberSaveable { mutableStateOf(-1L) }
     var userAddedSwitcher by rememberSaveable { mutableStateOf(false) }
 
-    // TODO: create a function to get personal from backend
     val data = remember { mutableListOf<Reminder>() }
-//    data.addAll()
+
+    var groupUsers: List<ApplicationUser> = listOf<ApplicationUser>()
+
+    if (groupId != -1L) {
+        data.clear()
+        data.addAll(BackendService(preferences).getAllRemindersOfGroup(groupId))
+        groupUsers = BackendService(preferences).getAllUsersOfGroup(groupId)
+    }
+
+
 
     Column(
         modifier = Modifier
@@ -75,9 +84,11 @@ fun GroupScreen(
                 .fillMaxSize()
         ) {
             if (selectedTabIndex == 0) {
-                DisplayList(preferences, groupId, data, navController, edit)
+                DisplayList(
+                    preferences, groupId, data, navController, editCallback
+                )
             } else {
-                DisplayMembers(preferences, groupId, userAddedSwitcher) {
+                DisplayMembers(preferences, groupId, userAddedSwitcher, groupUsers) {
                     userAddedSwitcher = !userAddedSwitcher
                 }
             }
@@ -109,7 +120,7 @@ private fun DisplayGroupSelection(
                 .fillMaxWidth()
         ) {
             TextField(
-                value = if(groupId == -1L) "" else BackendService(preferences).getGroupById(groupId).getName(),
+                value = if(groupId == -1L) "" else BackendService(preferences).getGroupById(groupId).name,
                 onValueChange = { },
                 readOnly = true,
                 label = {
@@ -131,18 +142,18 @@ private fun DisplayGroupSelection(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                val groupList = BackendService(preferences).getGroups().filter { group -> group.getId() != preferences.groupId }
+                val groupList = BackendService(preferences).getAllGroupOfUser(preferences.userId)
                 groupList.forEach { group ->
                     DropdownMenuItem(
                         onClick = {
-                            onSwitch(group.getId())
+                            onSwitch(group.id)
                             expandedDropdownGroups = false
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(10.dp)
                     ) {
-                        Text(text = group.getName())
+                        Text(text = group.name)
                     }
                 }
             }
@@ -210,14 +221,7 @@ private fun DisplayInviteFields(
                     return@Button
                 }
                 try{
-                    val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-                    StrictMode.setThreadPolicy(policy)
-                    val getUserByEmailResponse = sendGet("http://${preferences.serverIp}/users/email/${email.text}")
-                    val user = jsonToApplicationUser(getUserByEmailResponse)
-                    sendPost(
-                        "http://${preferences.serverIp}/users/${user.getId()}/groups",
-                        "{\"id\": ${groupId}}"
-                    )
+                    BackendService(preferences).addUserToGroup(preferences.userId, groupId)
                     ContextCompat.getMainExecutor(context).execute {
                         Toast.makeText(
                             context,
@@ -274,16 +278,13 @@ private fun DisplayMembers(
     preferences: PreferencesData,
     groupId: Long,
     userAdded: Boolean,
+    groupUsers: List<ApplicationUser>,
     onUserAdd: () -> Unit
 ) {
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(
-                rememberScrollState(),
-                flingBehavior = null // TODO: disable
-            )
     ) {
         DisplayInviteFields(preferences, groupId, onUserAdd)
         Box(
@@ -293,7 +294,30 @@ private fun DisplayMembers(
                 .align(Alignment.CenterHorizontally),
             contentAlignment = Center
         ) {
-            // list of group reminders here
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.Top
+            ) {
+                items(items = groupUsers, itemContent = { item ->
+                    Row(
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .background(Color.LightGray)
+                            .fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = item.name,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .padding(10.dp)
+                        )
+                    }
+                })
+            }
+
+
         }
     }
 }
@@ -304,7 +328,7 @@ private fun DisplayList(
     groupId: Long,
     data:  MutableList<Reminder>,
     navController: NavController,
-    edit: MutableState<Reminder>
+    editCallback: (edit: Reminder) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -326,21 +350,14 @@ private fun DisplayList(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = item.getTitle(),
+                        text = item.name,
                         fontSize = 14.sp,
                         modifier = Modifier
                             .padding(10.dp)
                     )
-//                    Text(
-//                        text = "${item.getAmount()} ${BackendService(preferences).getGroupById(groupId).getCurrency()}",
-//                        fontSize = 14.sp,
-//                        color = Color.hsl(358f, 0.63f, 0.49f),
-//                        modifier = Modifier
-//                            .padding(10.dp)
-//                    )
                     Row {
                         IconButton(onClick = {
-                            edit.value = item
+                            editCallback(item)
                             navController.navigate(ScreenNavigationItem.AddSpending.route) {
                                 // Pop up to the start destination of the graph to
                                 // avoid building up a large stack of destinations
@@ -361,9 +378,39 @@ private fun DisplayList(
                                 EvaIcons.Fill.Edit, "Edit"
                             )
                         }
-                        // TODO: add backend
                         IconButton(onClick = {
+                            BackendService(preferences).deleteReminderFromGroup(groupId, item.id)
                             data.remove(item)
+                            navController.navigate(ScreenNavigationItem.Personal.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                navController.graph.startDestinationRoute?.let { route ->
+                                    popUpTo(route) {
+                                        saveState = true
+                                    }
+                                }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
+                                launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
+                                restoreState = true
+                            }
+                            navController.navigate(ScreenNavigationItem.Group.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                navController.graph.startDestinationRoute?.let { route ->
+                                    popUpTo(route) {
+                                        saveState = true
+                                    }
+                                }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
+                                launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
+                                restoreState = true
+                            }
                         }) {
                             Icon(
                                 EvaIcons.Fill.Trash, "Delete"
@@ -374,4 +421,5 @@ private fun DisplayList(
             })
         }
     }
+
 }

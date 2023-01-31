@@ -8,8 +8,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -18,47 +16,77 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.payrem.Preferences
 import com.payrem.backend.entities.Reminder
 import com.payrem.backend.service.BackendService
-import com.payrem.backend.service.ReminderItem
-import com.payrem.ui.components.ExpandableList
 import com.payrem.ui.components.screens.navigation.ScreenNavigationItem
 import compose.icons.EvaIcons
 import compose.icons.evaicons.Fill
 import compose.icons.evaicons.fill.Edit
-import compose.icons.evaicons.fill.PieChart
 import compose.icons.evaicons.fill.Trash
 
 @Composable
 fun PersonalScreen(
     context: Context,
     navController: NavController,
-    edit: MutableState<Reminder>
+    editCallback: (edit: Reminder) -> Unit
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
 
     val scaleButtonWidth = 50
     val scaleButtonPadding = 8
 
-    // TODO: create a function to get personal from backend
-    val data = remember { mutableListOf<Reminder>() }
-//    data.addAll()
+    var flag = remember {mutableStateOf(true)}
+    var data = rememberSaveable { mutableListOf<Reminder>() }
+    data.clear()
+    data.addAll(BackendService(preferences).getAllRemindersOfUser(preferences.userId))
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         // content
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().testTag("personalList")
         ) {
             DisplayList(
-                scaleButtonWidth, scaleButtonPadding, data, navController, edit
-            )
+                scaleButtonWidth, scaleButtonPadding, data, navController, editCallback
+            ){ reminderId ->
+                BackendService(preferences).deleteReminderFromUser(preferences.userId, reminderId)
+                navController.navigate(ScreenNavigationItem.Group.route) {
+                    // Pop up to the start destination of the graph to
+                    // avoid building up a large stack of destinations
+                    // on the back stack as users select items
+                    navController.graph.startDestinationRoute?.let { route ->
+                        popUpTo(route) {
+                            saveState = true
+                        }
+                    }
+                    // Avoid multiple copies of the same destination when
+                    // reselecting the same item
+                    launchSingleTop = true
+                    // Restore state when reselecting a previously selected item
+                    restoreState = true
+                }
+                navController.navigate(ScreenNavigationItem.Personal.route) {
+                    // Pop up to the start destination of the graph to
+                    // avoid building up a large stack of destinations
+                    // on the back stack as users select items
+                    navController.graph.startDestinationRoute?.let { route ->
+                        popUpTo(route) {
+                            saveState = true
+                        }
+                    }
+                    // Avoid multiple copies of the same destination when
+                    // reselecting the same item
+                    launchSingleTop = true
+                    // Restore state when reselecting a previously selected item
+                    restoreState = true
+                }
+            }
         }
     }
 }
@@ -69,12 +97,12 @@ private fun DisplayList(
     scaleButtonPadding: Int,
     data: MutableList<Reminder>,
     navController: NavController,
-    edit: MutableState<Reminder>
+    editCallback: (edit: Reminder) -> Unit,
+    delete: (reminderId: Long) -> Unit,
 ) {
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .padding((scaleButtonWidth + scaleButtonPadding).dp, 0.dp, 0.dp, 0.dp),
+            .fillMaxSize(),
         contentAlignment = TopCenter
     ) {
         LazyColumn(
@@ -92,7 +120,7 @@ private fun DisplayList(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = item.getTitle(),
+                        text = item.name,
                         fontSize = 14.sp,
                         modifier = Modifier
                             .padding(10.dp)
@@ -107,7 +135,7 @@ private fun DisplayList(
 
                     Row {
                         IconButton(onClick = {
-                            edit.value = item
+                            editCallback(item)
                             navController.navigate(ScreenNavigationItem.AddSpending.route) {
                                 // Pop up to the start destination of the graph to
                                 // avoid building up a large stack of destinations
@@ -129,8 +157,7 @@ private fun DisplayList(
                             )
                         }
                         IconButton(onClick = {
-                            // TODO remove from back
-                            data.remove(item)
+                            delete(item.id)
                         }) {
                             Icon(
                                 EvaIcons.Fill.Trash, "Delete"

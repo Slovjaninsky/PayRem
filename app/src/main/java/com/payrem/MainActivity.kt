@@ -43,8 +43,11 @@ fun MainScreen() {
     val edit = remember { mutableStateOf(Reminder()) }
     val navController = rememberNavController()
     Scaffold(
+        topBar = { com.payrem.ui.components.TopAppBar(logout = true)},
         bottomBar = { BottomNavigationBar(navController) },
-        floatingActionButton = { PlusButton(navController) },
+        floatingActionButton = { PlusButton(navController){ editNew ->
+            edit.value = editNew
+        } },
         floatingActionButtonPosition = FabPosition.Center,
         isFloatingActionButtonDocked = true,
         content = { padding ->
@@ -52,8 +55,12 @@ fun MainScreen() {
                 ScreenNavigation(
                     navController,
                     LocalContext.current,
-                    ScreenNavigationItem.Personal.route
-                )
+                    ScreenNavigationItem.Personal.route,
+                    edit.value
+                ) { editNew ->
+                    edit.value = editNew
+                }
+
             }
         }
     )

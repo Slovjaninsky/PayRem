@@ -9,7 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.payrem.backend.api.jsonArrayToNotification
+//import com.payrem.backend.api.jsonArrayToNotification
 import com.payrem.backend.api.sendGet
 
 class NotificationService(
@@ -24,35 +24,35 @@ class NotificationService(
         val mainLooper = Looper.getMainLooper()
         val preferences = Preferences(context).read()
 
-        Thread {
-            try {
-                while (true) {
-                    val notifications = jsonArrayToNotification(
-                        sendGet("http://${preferences.serverIp}/users/${
-                            preferences.userId}/notifications")
-                    )
-
-                    if (notifications.isNotEmpty()) {
-                        for (notification in notifications) {
-                            if (notification.getUserId().toString() == preferences.userId &&
-                                    notification.getAmount() < 0 &&
-                                    notification.getUserFromId().toString() != preferences.userId) {
-                                Handler(mainLooper).post {
-                                    if (notification.getExpenseId() != -1L) {
-                                        sendNotification("Added new expense")
-                                    }
-                                    if (notification.getGroupId() != -1L) {
-                                        sendNotification("Added to new group")
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Thread.sleep(5_000)
-                }
-            } catch (_: Exception) { }
-        }.start()
+//        Thread {
+//            try {
+//                while (true) {
+//                    val notifications = jsonArrayToNotification(
+//                        sendGet("http://${preferences.serverIp}/users/${
+//                            preferences.userId}/notifications")
+//                    )
+//
+//                    if (notifications.isNotEmpty()) {
+//                        for (notification in notifications) {
+//                            if (notification.getUserId().toString() == preferences.userId &&
+//                                    notification.getAmount() < 0 &&
+//                                    notification.getUserFromId().toString() != preferences.userId) {
+//                                Handler(mainLooper).post {
+//                                    if (notification.getExpenseId() != -1L) {
+//                                        sendNotification("Added new expense")
+//                                    }
+//                                    if (notification.getGroupId() != -1L) {
+//                                        sendNotification("Added to new group")
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//
+//                    Thread.sleep(5_000)
+//                }
+//            } catch (_: Exception) { }
+//        }.start()
     }
 
     private fun createNotificationChannel() {

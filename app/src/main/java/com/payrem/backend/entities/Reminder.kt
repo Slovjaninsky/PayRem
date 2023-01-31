@@ -1,109 +1,35 @@
 package com.payrem.backend.entities
 
 class Reminder {
-
-    private var id: Long = -1
-
-    private var title: String = ""
-    private var description: String = ""
-    private var frequency: Int = 0
-    private var dateStamp: String = "2000-01-01"
-    private var timeStamp: String = "00:00"
-    private var isGroupReminder: Boolean = false
-    private var groupId: Long = -1
+    var id: Long = -1L
+    var name: String = ""
+    var description: String = ""
+    var date: String = "2000-01-01"
+    var period: Long = 0
+    var time: String = "00:00"
+    var userId: Long = -1
+    var groupId: Long = -1
 
     constructor()
 
     constructor(
         id: Long,
-        title: String,
+        name: String,
         description: String,
-        frequency: Int,
-        dateStamp: String,
-        timeStamp: String
-    ) {
-        this.id = id
-        this.title = title
-        this.description = description
-        this.frequency = frequency
-        this.dateStamp = dateStamp
-        this.timeStamp = timeStamp
-    }
-
-    constructor(
-        title: String,
-        description: String,
-        frequency: Int,
-        dateStamp: String,
-        timeStamp: String
-    ) {
-        this.title = title
-        this.description = description
-        this.frequency = frequency
-        this.dateStamp = dateStamp
-        this.timeStamp = timeStamp
-    }
-
-    constructor(
-        id: Long,
-        title: String,
-        description: String,
-        frequency: Int,
-        dateStamp: String,
-        timeStamp: String,
-        isGroupReminder: Boolean,
+        date: String,
+        period: Long,
+        time: String,
+        userId: Long,
         groupId: Long
     ) {
         this.id = id
-        this.title = title
+        this.name = name
         this.description = description
-        this.frequency = frequency
-        this.dateStamp = dateStamp
-        this.timeStamp = timeStamp
-        this.isGroupReminder = isGroupReminder
+        this.date = date
+        this.period = period
+        this.time = time
+        this.userId = userId
         this.groupId = groupId
-    }
-
-    fun getTitle(): String {
-        return title
-    }
-
-    fun getDescription(): String {
-        return description
-    }
-
-    fun getDateStamp(): String {
-        return dateStamp
-    }
-
-    fun getId(): Long {
-        return id
-    }
-
-    fun getTimeStamp(): String {
-        return timeStamp
-    }
-
-    fun getFrequency(): Int {
-        return frequency
-    }
-
-    fun isGroupReminder(): Boolean {
-        return isGroupReminder
-    }
-
-    fun getGroupId(): Long {
-        return groupId
-    }
-
-
-
-    override fun hashCode(): Int {
-        return super.hashCode()
-    }
-
-    override fun toString(): String {
-        return super.toString()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -113,14 +39,30 @@ class Reminder {
         other as Reminder
 
         if (id != other.id) return false
-        if (title != other.title) return false
+        if (name != other.name) return false
         if (description != other.description) return false
-        if (frequency != other.frequency) return false
-        if (dateStamp != other.dateStamp) return false
-        if (timeStamp != other.timeStamp) return false
-        if (isGroupReminder != other.isGroupReminder) return false
+        if (date != other.date) return false
+        if (period != other.period) return false
+        if (time != other.time) return false
+        if (userId != other.userId) return false
         if (groupId != other.groupId) return false
 
         return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + description.hashCode()
+        result = 31 * result + date.hashCode()
+        result = 31 * result + period.hashCode()
+        result = 31 * result + time.hashCode()
+        result = 31 * result + userId.hashCode()
+        result = 31 * result + groupId.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "Reminder(id=$id, name='$name', description='$description', date='$date', period=$period, time='$time', userId=$userId, groupId=$groupId)"
     }
 }

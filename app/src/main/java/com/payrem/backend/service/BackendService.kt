@@ -4,108 +4,229 @@ import android.os.StrictMode
 import com.google.gson.Gson
 import com.payrem.backend.api.*
 import com.payrem.PreferencesData
+import com.payrem.backend.entities.ApplicationUser
 import com.payrem.backend.entities.Reminder
-import com.payrem.backend.entities.ReminderGroup
-import java.time.LocalDate
+import com.payrem.backend.entities.Group
+import com.payrem.backend.exceptions.FailedLoginException
+import java.io.OutputStreamWriter
+import java.net.HttpURLConnection
+import java.net.URL
 import java.time.format.DateTimeFormatter
-import kotlin.collections.ArrayList
 
 class BackendService(
     private val preferences: PreferencesData
 ) {
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-    fun getPersonal(dateFrom: LocalDate, dateTo: LocalDate): List<ReminderItem> {
-        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-        StrictMode.setThreadPolicy(policy)
-
-        val list = ArrayList<ReminderItem>()
-
-        return list
-    }
-
-    //TODO: change to entities
-    fun getGroups(): List<ReminderGroup> {
-        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-        StrictMode.setThreadPolicy(policy)
-
-        val jsonBodyGroups = sendGet(
-            "http://${preferences.serverIp}/users/${preferences.userId}/groups"
-        )
-        val groups: List<ReminderGroup> = jsonArrayToExpenseGroups(jsonBodyGroups)
-        println(groups)
-
+    fun setPolicy() {
         //todo https://stackoverflow.com/questions/6343166/how-can-i-fix-android-os-networkonmainthreadexception#:~:text=Implementation%20summary
-        return groups
-    }
-
-    fun getGroupById(id: Long): ReminderGroup {
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
-
-        val jsonBodyGroup = sendGet(
-            "http://${preferences.serverIp}/groups/${id}"
-        )
-
-        //todo https://stackoverflow.com/questions/6343166/how-can-i-fix-android-os-networkonmainthreadexception#:~:text=Implementation%20summary
-        return jsonToExpenseGroup(jsonBodyGroup)
     }
 
-    fun getGroupList(groupId: Long): List<Reminder> {
-        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-        StrictMode.setThreadPolicy(policy)
+    //region user
+    fun getAllUsers(): List<ApplicationUser> {
+        setPolicy()
 
-        val responseGroupList = if (groupId == -1L) "[]" else sendGet(
-            //todo change to group choice
-            "http://${preferences.serverIp}/groups/${groupId}/expenses"
-        )
+        val jsonUsers = sendGet("http://${preferences.serverIp}/user")
 
-        return jsonArrayToExpenses(responseGroupList).sortedBy {
-            LocalDate.parse(it.getDateStamp(), DateTimeFormatter.ofPattern("yyyy-MM-dd")) }.reversed()
+        return jsonArrayToApplicationUsers(jsonUsers)
     }
 
-    fun addPersonalReminder(name: String, desc: String, freq: Int, period: String, date: String, time: String) {
-        val freqMap = mapOf("Day" to 1, "Month" to -1, "Year" to -12)
-        Thread {
-            try {
-                val jsonBodyPOST = sendPost(
-                    "http://${preferences.serverIp}/user/${preferences.userId}/add/reminder",
-                    Gson().toJson(
-                        Reminder(name, desc, freq * freqMap[period]!!, date, time)
-                    )
-                )
+    fun getUserById(userId: Long): ApplicationUser {
+        setPolicy()
+
+        val jsonUser = sendGet("http://${preferences.serverIp}/user/${userId}")
+
+        return jsonToApplicationUser(jsonUser)
+    }
+
+    fun createUser(user: ApplicationUser): ApplicationUser {
+        setPolicy()
+
+        val jsonUser = sendPost("http://${preferences.serverIp}/user",
+            "{\n" +
+                    "    \"password\": \"${user.password}\",\n" +
+                    "    \"name\": \"${user.name}\",\n" +
+                    "    \"surname\": \"${user.surname}\",\n" +
+                    "    \"email\": \"${user.email}\"\n" +
+                    "}")
+
+        return jsonToApplicationUser(jsonUser)
+    }
+
+    fun login(email: String, password: String): ApplicationUser {
+        setPolicy()
+
+        var res = ""
+        val url = URL("http://${preferences.serverIp}/user/login")
+        val requestBody = "{\n" +
+                "    \"password\": \"${password}\",\n" +
+                "    \"email\": \"${email}\"\n" +
+                "}"
+        with(url.openConnection() as HttpURLConnection) {
+            requestMethod = "POST"
+            doInput = true
+            doOutput = true
+            setRequestProperty("Content-Type", "application/json")
+            val outputStreamWriter = OutputStreamWriter(outputStream)
+            outputStreamWriter.write(requestBody)
+            outputStreamWriter.flush()
+            println("Sent 'POST' request to URL : $url, with body : $requestBody; Response Code : $responseCode")
+            if (responseCode == 401 || responseCode == 409 || responseCode == 400) {
+                throw FailedLoginException("Invalid password for email: $email")
             }
-            catch (e: Exception) {
-                print(e.stackTrace)
+            inputStream.bufferedReader().use {
+                it.lines().forEach { line -> res = res.plus(line + "\n") }
             }
         }
-
+        return jsonToApplicationUser(res)
     }
+
+    fun addUserToGroup(userId: Long, groupId: Long) {
+        setPolicy()
+
+        sendPut("http://${preferences.serverIp}/user/${userId}/add/group/${groupId}", "")
+    }
+
+    fun getAllGroupOfUser(userId: Long): List<Group> {
+        setPolicy()
+
+        val jsonGroups = sendGet("http://${preferences.serverIp}/user/${userId}/groups")
+
+        return jsonArrayToGroups(jsonGroups)
+    }
+
+    fun removeUserFromGroup(userId: Long, groupId: Long) {
+        setPolicy()
+
+        sendDelete("http://${preferences.serverIp}/user/${userId}/delete/group/${groupId}")
+    }
+
+    fun addReminderToUser(userId: Long, reminder: Reminder): Reminder {
+        setPolicy()
+
+        val jsonReminder = sendPost("http://${preferences.serverIp}/user/${userId}/add/reminder",
+        "{\n" +
+                "    \"name\": \"${reminder.name}\",\n" +
+                "    \"description\": \"${reminder.description}\",\n" +
+                "    \"period\": ${reminder.period},\n" +
+                "    \"date\": \"${reminder.date}\",\n" +
+                "    \"time\": \"${reminder.time}\"\n" +
+                "}")
+
+        return jsonToReminder(jsonReminder)
+    }
+
+    fun getAllRemindersOfUser(userId: Long): List<Reminder> {
+        setPolicy()
+
+        val jsonReminders = sendGet("http://${preferences.serverIp}/user/${userId}/reminders")
+
+        return jsonArrayToReminders(jsonReminders)
+    }
+
+    fun deleteReminderFromUser(userId: Long, reminderId: Long) {
+        setPolicy()
+
+        sendDelete("http://${preferences.serverIp}/user/${userId}/delete/reminder/${reminderId}")
+    }
+
+    fun deleteUser(userId: Long) {
+        setPolicy()
+
+        sendDelete("http://${preferences.serverIp}/user/${userId}")
+    }
+    //endregion
+
+    //region group
+    fun getAllGroups(): List<Group> {
+        setPolicy()
+
+        val jsonGroups = sendGet("http://${preferences.serverIp}/group")
+
+        return jsonArrayToGroups(jsonGroups)
+    }
+
+    fun getGroupById(groupId: Long): Group {
+        setPolicy()
+
+        val jsonGroup = sendGet("http://${preferences.serverIp}/group/${groupId}")
+
+        return jsonToGroup(jsonGroup)
+    }
+
+    fun createGroup(group: Group): Group {
+        setPolicy()
+
+        val jsonGroup = sendPost("http://${preferences.serverIp}/group",
+            "{\n" +
+                    "    \"name\": \"${group.name}\",\n" +
+                    "    \"description\": \"${group.description}\"\n" +
+                    "}")
+
+        return jsonToGroup(jsonGroup)
+    }
+
+    fun getAllUsersOfGroup(groupId: Long): List<ApplicationUser> {
+        setPolicy()
+
+        val jsonUsers = sendGet("http://${preferences.serverIp}/group/${groupId}/users")
+
+        return jsonArrayToApplicationUsers(jsonUsers)
+    }
+
+    fun addReminderToGroup(groupId: Long, reminder: Reminder): Reminder {
+        setPolicy()
+
+        val jsonReminder = sendPost("http://${preferences.serverIp}/group/${groupId}/add/reminder",
+        "{\n" +
+                "    \"name\": \"${reminder.name}\",\n" +
+                "    \"description\": \"${reminder.description}\",\n" +
+                "    \"period\": ${reminder.period},\n" +
+                "    \"date\": \"${reminder.date}\",\n" +
+                "    \"time\": \"${reminder.time}\"\n" +
+                "}")
+
+        return jsonToReminder(jsonReminder)
+    }
+
+    fun getAllRemindersOfGroup(groupId: Long): List<Reminder> {
+        setPolicy()
+
+        val jsonReminders = sendGet("http://${preferences.serverIp}/group/${groupId}/reminders")
+
+        return jsonArrayToReminders(jsonReminders)
+    }
+
+    fun deleteReminderFromGroup(groupId: Long, reminderId: Long) {
+        setPolicy()
+
+        sendDelete("http://${preferences.serverIp}/group/${groupId}/delete/reminder/${reminderId}")
+    }
+
+    fun deleteGroup(userId: Long) {
+        setPolicy()
+
+        sendDelete("http://${preferences.serverIp}/group/${userId}")
+    }
+    //endregion
+
+    //region reminder
+    fun editReminder(reminder: Reminder): Reminder {
+        setPolicy()
+
+        val jsonReminder = sendPut("http://${preferences.serverIp}/reminder",
+            "{\n" +
+                    "    \"id\": \"${reminder.id}\",\n" +
+                    "    \"name\": \"${reminder.name}\",\n" +
+                    "    \"description\": \"${reminder.description}\",\n" +
+                    "    \"period\": ${reminder.period},\n" +
+                    "    \"date\": \"${reminder.date}\",\n" +
+                    "    \"time\": \"${reminder.time}\"\n" +
+                    "}")
+
+        return jsonToReminder(jsonReminder)
+    }
+    //endregion
 }
-
-data class ReminderItem(
-    var text: String,
-    var expenses: ArrayList<Reminder>
-) {
-    constructor(reminder: Reminder) : this(
-        reminder.getTitle(),
-        arrayListOf(reminder)
-    )
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as ReminderItem
-
-        if (text != other.text) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return text.hashCode()
-    }
-}
-//endregion
-

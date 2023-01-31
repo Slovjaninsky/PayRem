@@ -3,6 +3,7 @@ package com.payrem.ui.components.screens
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Typeface
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -17,21 +18,23 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.payrem.Preferences
+import com.payrem.backend.entities.Group
 import com.payrem.backend.entities.Reminder
-import com.payrem.backend.entities.ReminderGroup
 import com.payrem.backend.service.BackendService
 import com.payrem.ui.components.DatePickerField
 import com.payrem.ui.components.TimePicker
 
 val numberRegex = Regex("^\\d*\$")
+val periodsMap = mapOf("Day" to 1, "Month" to -1, "Year" to -12)
 
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddReminderScreen(
     context: Context,
-    editMutable: MutableState<Reminder>
+    edit: Reminder
 ) {
     val preferences = rememberSaveable { Preferences(context).read() }
     var reminderTitle by remember { mutableStateOf(TextFieldValue()) }
@@ -44,27 +47,33 @@ fun AddReminderScreen(
     var expandedDropDownRecurrence by remember { mutableStateOf(false) }
     var expandedDropdownGroups by remember { mutableStateOf(false) }
     var groupName by remember { mutableStateOf("") }
-    var groupId by remember { mutableStateOf(0L) }
-    var groupIdLast by remember { mutableStateOf(0L) }
-    var groupList by remember { mutableStateOf(listOf<ReminderGroup>()) }
+    var groupId by remember { mutableStateOf(-1L) }
+    var groupIdLast by remember { mutableStateOf(-1L) }
+    var groupList by remember { mutableStateOf(listOf<Group>()) }
 
-    val edit = editMutable.value
 
-    if (edit.getId() != -1L) {
-        reminderTitle = TextFieldValue(edit.getTitle())
-        reminderDescription = TextFieldValue(edit.getDescription())
-        reminderDate.value = edit.getDateStamp()
-        reminderTime.value = edit.getTimeStamp()
-        reminderRecurrenceNumber = if (edit.getFrequency() >= 0)
-                TextFieldValue(edit.getFrequency().toString())
+    if (edit.id != -1L && reminderDate.value == "") {
+        reminderTitle = TextFieldValue(edit.name)
+        reminderDescription = TextFieldValue(edit.description)
+        reminderDate.value = edit.date
+        reminderTime.value = edit.time
+        reminderRecurrenceNumber = if (edit.period >= 0)
+                TextFieldValue(edit.period.toString())
             else
-                TextFieldValue((-edit.getFrequency()).toString())
-        reminderRecurrencePeriod = if (edit.getFrequency() >= 0)
+                TextFieldValue((-edit.period).toString())
+        reminderRecurrencePeriod = if (edit.period >= 0)
                 TextFieldValue("Day")
             else
                 TextFieldValue("Month")
-        isGroupReminder = edit.isGroupReminder()
-        groupId = edit.getGroupId()
+        isGroupReminder = (edit.groupId != -1L)
+        if (isGroupReminder) {
+            groupId = edit.groupId
+            groupName = BackendService(preferences).getGroupById(edit.groupId).name
+        } else {
+            groupId = -1L
+            groupName = ""
+        }
+
     }
 
     Column(
@@ -107,12 +116,163 @@ fun AddReminderScreen(
                 }
                 Button(
                     onClick = {
-                        if (edit.getId() != -1L) {
-                            /* TODO Edit existing reminder */
-                            editMutable.value = Reminder()
+                        // Edit existing reminder
+                        if (edit.id != -1L) {
+                            // For group
+                            if (isGroupReminder) {
+                                // If something is not filled in
+                                if (
+                                    reminderTitle.text == "" ||
+                                    reminderDescription.text == "" ||
+                                    reminderDate.value == "" ||
+                                    reminderTime.value == "" ||
+                                    reminderRecurrenceNumber.text == "" ||
+                                    reminderRecurrencePeriod.text == "" ||
+                                    groupId == 0L
+                                ) {
+                                    ContextCompat.getMainExecutor(context).execute {
+                                        Toast.makeText(
+                                            context,
+                                            "Please, fill in all the field",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                                // Everything is OK
+                                else {
+                                    edit.name = reminderTitle.text
+                                    edit.description = reminderDescription.text
+                                    edit.date = reminderDate.value
+                                    edit.time = reminderTime.value
+                                    edit.period = reminderRecurrenceNumber.text.toLong() *
+                                            periodsMap[reminderRecurrencePeriod.text]!!
+                                    edit.groupId = groupId
+                                    BackendService(preferences).editReminder(edit)
+                                    ContextCompat.getMainExecutor(context).execute {
+                                        Toast.makeText(
+                                            context,
+                                            "Reminder saved successfully",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
+                            // For personal
+                            else {
+                                // If something is not filled in
+                                if (
+                                    reminderTitle.text == "" ||
+                                    reminderDescription.text == "" ||
+                                    reminderDate.value == "" ||
+                                    reminderTime.value == "" ||
+                                    reminderRecurrenceNumber.text == "" ||
+                                    reminderRecurrencePeriod.text == ""
+                                ) {
+                                    ContextCompat.getMainExecutor(context).execute {
+                                        Toast.makeText(
+                                            context,
+                                            "Please, fill in all the field",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                                // Everything is OK
+                                else {
+                                    edit.name = reminderTitle.text
+                                    edit.description = reminderDescription.text
+                                    edit.date = reminderDate.value
+                                    edit.time = reminderTime.value
+                                    edit.period = reminderRecurrenceNumber.text.toLong() *
+                                            periodsMap[reminderRecurrencePeriod.text]!!
+                                    BackendService(preferences).editReminder(edit)
+                                    ContextCompat.getMainExecutor(context).execute {
+                                        Toast.makeText(
+                                            context,
+                                            "Reminder saved successfully",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
                         }
+                        // Create new reminder
                         else {
-                            /* TODO Add new reminder */
+                            // For group
+                            if (isGroupReminder) {
+                                // If something is not filled in
+                                if (
+                                    reminderTitle.text == "" ||
+                                    reminderDescription.text == "" ||
+                                    reminderDate.value == "" ||
+                                    reminderTime.value == "" ||
+                                    reminderRecurrenceNumber.text == "" ||
+                                    reminderRecurrencePeriod.text == "" ||
+                                    groupId == 0L
+                                ) {
+                                    ContextCompat.getMainExecutor(context).execute {
+                                        Toast.makeText(
+                                            context,
+                                            "Please, fill in all the field",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                                // Everything is OK
+                                else {
+                                    edit.name = reminderTitle.text
+                                    edit.description = reminderDescription.text
+                                    edit.date = reminderDate.value
+                                    edit.time = reminderTime.value
+                                    edit.period = reminderRecurrenceNumber.text.toLong() *
+                                            periodsMap[reminderRecurrencePeriod.text]!!
+                                    edit.groupId = groupId
+                                    BackendService(preferences).addReminderToGroup(groupId, edit)
+                                    ContextCompat.getMainExecutor(context).execute {
+                                        Toast.makeText(
+                                            context,
+                                            "Reminder saved successfully",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
+                            // For personal
+                            else {
+                                // If something is not filled in
+                                if (
+                                    reminderTitle.text == "" ||
+                                    reminderDescription.text == "" ||
+                                    reminderDate.value == "" ||
+                                    reminderTime.value == "" ||
+                                    reminderRecurrenceNumber.text == "" ||
+                                    reminderRecurrencePeriod.text == ""
+                                ) {
+                                    ContextCompat.getMainExecutor(context).execute {
+                                        Toast.makeText(
+                                            context,
+                                            "Please, fill in all the field",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                                // Everything is OK
+                                else {
+                                    edit.name = reminderTitle.text
+                                    edit.description = reminderDescription.text
+                                    edit.date = reminderDate.value
+                                    edit.time = reminderTime.value
+                                    edit.period = reminderRecurrenceNumber.text.toLong() *
+                                            periodsMap[reminderRecurrencePeriod.text]!!
+                                    BackendService(preferences).addReminderToUser(preferences.userId, edit)
+                                    ContextCompat.getMainExecutor(context).execute {
+                                        Toast.makeText(
+                                            context,
+                                            "Reminder saved successfully",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
                         }
                     },
                     modifier = Modifier
@@ -243,8 +403,8 @@ fun AddReminderScreen(
                         groupIdLast = groupId
                         groupId = 0L
                     }
-                    groupList = BackendService(preferences).getGroups()
-                        .filter { group -> group.getId() != preferences.groupId }
+                    groupList = BackendService(preferences)
+                        .getAllGroupOfUser(preferences.userId)
                 },
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
@@ -257,8 +417,7 @@ fun AddReminderScreen(
                     .clickable {
                         isGroupReminder = !isGroupReminder
                         groupList = BackendService(preferences)
-                            .getGroups()
-                            .filter { group -> group.getId() != preferences.groupId }
+                            .getAllGroupOfUser(preferences.userId)
                         if (isGroupReminder) {
                             groupId = groupIdLast
                         } else {
@@ -311,14 +470,14 @@ fun AddReminderScreen(
                         groupList.forEach { group ->
                             DropdownMenuItem(
                                 onClick = {
-                                    groupName = group.getName()
-                                    groupId = group.getId()
+                                    groupName = group.name
+                                    groupId = group.id
                                     expandedDropdownGroups = false
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
                             ) {
-                                Text(text = group.getName())
+                                Text(text = group.name)
                             }
                         }
                     }
@@ -327,3 +486,4 @@ fun AddReminderScreen(
         }
     }
 }
+
