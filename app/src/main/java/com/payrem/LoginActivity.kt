@@ -170,7 +170,6 @@ fun SignUpMailScreen(context: Context, navController: NavController) {
     val showError = remember { mutableStateOf(false) }
     val errorMessage = remember { mutableStateOf("") }
     val pass = remember { mutableStateOf("") }
-    val personalCurrency = remember { mutableStateOf("") }
     Scaffold(
         content = { padding ->
             Box(modifier = Modifier.padding(padding)) {
@@ -200,7 +199,6 @@ fun SignUpMailScreen(context: Context, navController: NavController) {
                             || password.value.isEmpty()
                             || username.value.isEmpty()
                             || repeatPassword.value.isEmpty()
-                            || personalCurrency.value.isEmpty()
                         ) {
                             ContextCompat.getMainExecutor(context).execute {
                                 Toast.makeText(

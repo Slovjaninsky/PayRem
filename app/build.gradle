@@ -70,4 +70,5 @@ dependencies {
     implementation 'br.com.devsrsouza.compose.icons.android:eva-icons:1.0.0'
     implementation 'androidx.work:work-runtime-ktx:2.7.1'
     testImplementation "junit:junit:4.13.2"
+    implementation 'com.github.theozgurr:NotificationMan:1.0.8'
 }
