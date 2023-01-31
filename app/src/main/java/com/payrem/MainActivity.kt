@@ -14,18 +14,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
 import com.payrem.backend.entities.Reminder
 import com.payrem.ui.components.BottomNavigationBar
 import com.payrem.ui.components.PlusButton
 import com.payrem.ui.components.screens.navigation.ScreenNavigation
 import com.payrem.ui.components.screens.navigation.ScreenNavigationItem
 import com.payrem.ui.theme.PayRemTheme
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
+    private val workManager = WorkManager.getInstance(application)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             PayRemTheme {
+                val recurringWork: PeriodicWorkRequest =
+                    PeriodicWorkRequest.Builder(NotificationIdle::class.java, 1, TimeUnit.MINUTES)
+                        .build()
+                workManager.enqueue(recurringWork)
+
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),

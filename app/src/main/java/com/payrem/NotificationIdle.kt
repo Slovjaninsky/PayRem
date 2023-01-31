@@ -11,8 +11,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import com.payrem.backend.entities.Reminder
 //import com.payrem.backend.api.jsonArrayToNotification
-import com.payrem.backend.api.sendGet
+import com.payrem.backend.service.BackendService
 
 class NotificationIdle(val context: Context, workerParams: WorkerParameters) : Worker(
     context,
@@ -27,39 +28,42 @@ class NotificationIdle(val context: Context, workerParams: WorkerParameters) : W
             val preferences = Preferences(context).read()
             val mainLooper = Looper.getMainLooper()
 
-//            val notifications = jsonArrayToNotification(
-//                sendGet(
-//                    "http://${preferences.serverIp}/users/${
-//                        preferences.userId
-//                    }/notifications"
-//                )
-//            )
-//
-//            if (notifications.isNotEmpty()) {
-//                for (notification in notifications) {
-//                    if (notification.getUserId().toString() == preferences.userId &&
-//                        notification.getAmount() < 0
-//                    ) {
-//                        Handler(mainLooper).post {
-//                            if (notification.getExpenseId() != -1L) {
-//                                sendNotification("Added new expense")
-//                            }
-//                            if (notification.getGroupId() != -1L) {
-//                                sendNotification("Added to new group")
-//                            }
-//                        }
-//                    }
-//                }
-//            }
+            var remindersForUser = BackendService(preferences).getAllRemindersOfUser(preferences.userId)
+
+            for (reminder in remindersForUser) {
+                if (checkReminder(reminder)) {
+                    Handler(mainLooper).post {
+                        sendNotification(reminder.name)
+                    }
+                }
+            }
+
+            val remindersForGroup = ArrayList<Reminder>()
+            for (group in BackendService(preferences).getAllGroupOfUser(preferences.userId)) {
+                remindersForGroup.addAll(BackendService(preferences).getAllRemindersOfGroup(group.id))
+            }
+
+            for (reminder in remindersForGroup) {
+                if (checkReminder(reminder)) {
+                    Handler(mainLooper).post {
+                        sendNotification(reminder.name)
+                    }
+                }
+            }
             Result.success()
         } catch (ignored: Throwable) {
             Result.failure()
         }
     }
 
+    private fun checkReminder(reminder: Reminder): Boolean {
+        //TODO: add here check if reminder should be showed
+        return true
+    }
+
     private fun createNotificationChannel() {
-        val name = "ReBalance"
-        val descriptionText = "ReBalance main channel"
+        val name = "PayRem"
+        val descriptionText = "PayRem main channel"
         val importance = NotificationManager.IMPORTANCE_DEFAULT
         val channel = NotificationChannel(channelId, name, importance).apply {
             description = descriptionText
