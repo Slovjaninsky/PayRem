@@ -81,7 +81,8 @@ fun AddGroupScreen(
                         }
                         return@Button
                     }
-                    BackendService(preferences).createGroup(Group(-1, groupName.text, groupDescription.text))
+                    val newGroup = BackendService(preferences).createGroup(Group(-1, groupName.text, groupDescription.text))
+                    BackendService(preferences).addUserToGroup(preferences.userId, newGroup.id)
                     ContextCompat.getMainExecutor(context).execute {
                         Toast.makeText(
                             context,
